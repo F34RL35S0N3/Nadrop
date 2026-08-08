@@ -36,8 +36,12 @@ export default function RootLayout({
     <html
       lang="id"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[var(--color-base)] text-[var(--color-ink)] antialiased">
+      <body
+        className="min-h-full flex flex-col bg-[var(--color-base)] text-[var(--color-ink)] antialiased"
+        suppressHydrationWarning
+      >
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
