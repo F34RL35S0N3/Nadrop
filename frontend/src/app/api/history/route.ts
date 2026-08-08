@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { formatUnits, getAddress, isAddress, type Address } from "viem";
-import { getMarketMeta } from "@/lib/markets";
+import { readMarketMetadataMap } from "@/lib/server/marketMetadata";
 import { readStakeRecordsByUser } from "@/lib/server/localDb";
 import { readMarketSnapshotMap } from "@/lib/server/marketSnapshots";
 import {
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       await readUserOnchainStakeRecords(userAddress),
     );
     const marketMap = await readMarketSnapshotMap();
+    const metadataMap = await readMarketMetadataMap();
     const predictions: Prediction[] = [];
     const stats: HistoryStats = {
       wins: 0,
@@ -59,7 +60,10 @@ export async function GET(request: NextRequest) {
       const market = marketMap.get(record.marketId);
       if (!market) continue;
 
-      const meta = getMarketMeta(record.marketId);
+      const meta = metadataMap[record.marketId] ?? {
+        question: `Market #${record.marketId}`,
+        category: "Umum",
+      };
       const totalYes = BigInt(market.totalYes);
       const totalNo = BigInt(market.totalNo);
       const totalPool = totalYes + totalNo;

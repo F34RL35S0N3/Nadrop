@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { PREDICTION_MARKET_ADDRESS } from "@/lib/contract";
-import { getResolvedMarketMeta } from "@/lib/markets";
+import { getResolvedMarketMeta, loadRemoteMarketMeta } from "@/lib/markets";
 import { Market } from "@/lib/types";
 
 type MarketSnapshot = {
@@ -63,6 +63,8 @@ export function useMarkets(options: UseMarketsOptions = {}) {
     let cancelled = false;
 
     async function loadMarkets() {
+      await loadRemoteMarketMeta().catch(console.error);
+
       const response = await fetch("/api/markets", { cache: "no-store" });
       const data = (await response.json()) as MarketsResponse;
 

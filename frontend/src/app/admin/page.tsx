@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { NetworkBadge, WalletChip } from "@/components/shared/WalletChip";
 import type { Market } from "@/lib/contract";
-import { getResolvedMarketMeta, saveCustomMarketMeta } from "@/lib/markets";
+import { getResolvedMarketMeta, loadRemoteMarketMeta, saveMarketMeta } from "@/lib/markets";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
 const marketListLimit = 8;
@@ -72,6 +72,8 @@ export default function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function refresh() {
+    await loadRemoteMarketMeta().catch(console.error);
+
     const response = await fetch("/api/markets", { cache: "no-store" });
     const body = await readJson(response);
 
@@ -132,10 +134,10 @@ export default function AdminPage() {
       }
 
       const marketId = Number(body.marketId);
-      saveCustomMarketMeta(marketId, {
+      await saveMarketMeta(marketId, {
         question: question.trim() || `Market #${marketId}`,
         category: category.trim() || "Umum",
-      });
+      }).catch(console.error);
 
       setQuestion("");
       setStatus({
