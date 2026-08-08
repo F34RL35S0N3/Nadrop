@@ -1,6 +1,7 @@
 "use client";
 
 import { CardStack } from "@/components/market/CardStack";
+import { ClaimPanel } from "@/components/market/ClaimPanel";
 import { SettlementToast } from "@/components/settlement/SettlementToast";
 import { useWallet } from "@/components/providers/WalletProvider";
 import { useMarkets } from "@/hooks/useMarkets";
@@ -203,6 +204,8 @@ export default function MarketPage() {
               </button>
             </div>
           )}
+
+          <ClaimPanel market={currentMarket} />
         </div>
 
         {/* ── Right Sidebar (Desktop only) ── */}
