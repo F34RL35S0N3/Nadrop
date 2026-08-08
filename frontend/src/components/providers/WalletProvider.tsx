@@ -111,6 +111,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           accentColor: "#0E9F6E",
           landingHeader: "Login ke SwipePredict",
           loginMessage: "Pakai email Privy atau MetaMask.",
+          walletList: ["detected_ethereum_wallets"],
           walletChainType: "ethereum-only",
         },
         defaultChain: monadTestnet,
