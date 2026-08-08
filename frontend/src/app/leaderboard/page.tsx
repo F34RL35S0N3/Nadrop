@@ -41,7 +41,7 @@ export default function LeaderboardPage() {
       const data = (await response.json()) as LeaderboardResponse;
 
       if (!response.ok) {
-        throw new Error(data.details ?? data.error ?? "Leaderboard gagal dibaca");
+        throw new Error(data.details ?? data.error ?? "Failed to load leaderboard");
       }
 
       const currentAddress = address?.toLowerCase();
@@ -75,10 +75,10 @@ export default function LeaderboardPage() {
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pb-24 pt-6 md:px-6 md:pb-8">
       <div className="mb-6">
         <h1 className="mb-1 font-display text-2xl font-bold text-[var(--color-ink)]">
-          Peringkat
+          Leaderboard
         </h1>
         <p className="text-sm text-[var(--color-chrome)]">
-          Predictor terbaik berdasarkan profit real dari market resolved.
+          Top predictors ranked by real profit from resolved markets.
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export default function LeaderboardPage() {
               </div>
             ) : topEntries.length === 0 ? (
               <div className="text-center font-data text-xs text-[var(--color-chrome)]">
-                Belum ada stake resolved yang tercatat.
+                No resolved stakes recorded yet.
               </div>
             ) : (
               <div className="flex items-end justify-center gap-4">
@@ -151,11 +151,11 @@ export default function LeaderboardPage() {
           {currentUser ? (
             <div className="hidden rounded-[var(--radius-card)] border border-[var(--color-yes-mid)] bg-[var(--color-yes-light)] p-4 shadow-[var(--shadow-stack)] lg:block">
               <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-[var(--color-yes)]">
-                Posisi Kamu
+                Your Position
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Peringkat</span>
+                  <span className="text-sm text-[var(--color-ink)]">Rank</span>
                   <span className="font-data text-xl font-bold text-[var(--color-ink)]">
                     #{currentUser.rank}
                   </span>
@@ -167,7 +167,7 @@ export default function LeaderboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Rekam Jejak</span>
+                  <span className="text-sm text-[var(--color-ink)]">Record</span>
                   <span className="font-data text-sm text-[var(--color-ink)]">
                     <span className="text-[var(--color-yes)]">{currentUser.wins}W</span>
                     {" / "}
@@ -205,7 +205,7 @@ export default function LeaderboardPage() {
 
             {!error && !isLoading && entries.length === 0 ? (
               <div className="font-data text-xs text-[var(--color-chrome)]">
-                Belum ada ranking. Stake dan resolve market dulu.
+                No rankings yet. Stake and resolve a market first.
               </div>
             ) : null}
 

@@ -88,7 +88,7 @@ export function SwipeGestureLayer({
         style={{ opacity: useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]) }}
       >
         <div className="px-3 py-1.5 rounded-[var(--radius-badge)] border-2 border-[var(--color-yes)] text-[var(--color-yes)] font-bold text-sm rotate-12">
-          YA
+          YES
         </div>
       </motion.div>
       <motion.div
@@ -96,7 +96,7 @@ export function SwipeGestureLayer({
         style={{ opacity: useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]) }}
       >
         <div className="px-3 py-1.5 rounded-[var(--radius-badge)] border-2 border-[var(--color-no)] text-[var(--color-no)] font-bold text-sm -rotate-12">
-          TIDAK
+          NO
         </div>
       </motion.div>
       <motion.div

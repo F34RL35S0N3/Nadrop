@@ -48,22 +48,22 @@ export default function LandingPage() {
           <div className="relative bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-card)] p-5 border border-[var(--color-chrome-border)]">
             <div className="flex items-center justify-between mb-3">
               <span className="px-2 py-0.5 rounded-[var(--radius-badge)] bg-[var(--color-chrome-light)] text-[10px] font-medium text-[var(--color-ink)]">
-                Kripto
+                Crypto
               </span>
               <span className="font-data text-[10px] text-[var(--color-chrome)]">
-                Berakhir 47:12
+                Ends 47:12
               </span>
             </div>
             <p className="font-display text-base font-bold text-[var(--color-ink)] leading-tight mb-3">
-              Akankah MON menembus $5 dalam 1 jam ke depan?
+              Will MON break $5 in the next hour?
             </p>
             {/* Mini odds bar */}
             <div className="h-2 rounded-full overflow-hidden bg-[var(--color-chrome-light)] mb-2">
               <div className="h-full rounded-full bg-[var(--color-yes)]" style={{ width: "62%" }} />
             </div>
             <div className="flex justify-between text-[10px]">
-              <span className="text-[var(--color-yes)] font-data font-medium">YA 62%</span>
-              <span className="text-[var(--color-no)] font-data font-medium">TIDAK 38%</span>
+              <span className="text-[var(--color-yes)] font-data font-medium">YES 62%</span>
+              <span className="text-[var(--color-no)] font-data font-medium">NO 38%</span>
             </div>
           </div>
 
@@ -77,14 +77,14 @@ export default function LandingPage() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M9 3L5 7L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              TIDAK
+              NO
             </motion.span>
             <motion.span
               animate={{ x: [4, 0, 4] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               className="text-xs text-[var(--color-yes)] font-medium flex items-center gap-1"
             >
-              YA
+              YES
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -99,7 +99,7 @@ export default function LandingPage() {
           transition={{ delay: 0.2, duration: 0.4 }}
           className="font-display text-3xl font-bold text-[var(--color-ink)] mb-3 tracking-tight"
         >
-          Prediksi. Swipe. Settle.
+          Predict. Swipe. Settle.
         </motion.h1>
 
         <motion.p
@@ -108,8 +108,8 @@ export default function LandingPage() {
           transition={{ delay: 0.3, duration: 0.4 }}
           className="text-[var(--color-chrome)] text-base leading-relaxed mb-8"
         >
-          Prediction market secepat swipe. Stake, prediksi ya atau tidak, dan
-          dapatkan settlement instan on-chain lewat Monad.
+          A prediction market as fast as a swipe. Stake, choose yes or no, and
+          get instant on-chain settlement on Monad.
         </motion.p>
 
         {/* CTA Button */}

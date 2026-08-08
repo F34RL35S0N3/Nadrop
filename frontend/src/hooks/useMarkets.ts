@@ -40,8 +40,8 @@ function toUiMarket(snapshot: MarketSnapshot): Market {
     participants: Math.round(totalStake),
     contractAddress: PREDICTION_MARKET_ADDRESS,
     resolveDescription: snapshot.resolved
-      ? `Market sudah di-resolve dengan hasil ${snapshot.outcome ? "YA" : "TIDAK"}.`
-      : "Admin akan memverifikasi jawaban setelah deadline.",
+      ? `Market resolved with outcome ${snapshot.outcome ? "YES" : "NO"}.`
+      : "Admin will verify the answer after the deadline.",
     status: snapshot.resolved
       ? "resolved"
       : Date.now() >= deadline
@@ -69,7 +69,7 @@ export function useMarkets(options: UseMarketsOptions = {}) {
       const data = (await response.json()) as MarketsResponse;
 
       if (!response.ok) {
-        throw new Error(data.details ?? data.error ?? "Markets gagal dibaca");
+        throw new Error(data.details ?? data.error ?? "Failed to load markets");
       }
 
       const nextMarkets = (data.markets ?? [])

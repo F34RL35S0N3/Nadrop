@@ -50,11 +50,11 @@ export function useSwipePredict() {
 
         try {
           if (market.status !== "active") {
-            throw new Error("Market sudah ditutup, swipe atas untuk skip");
+            throw new Error("Market is closed. Swipe up to skip.");
           }
 
           if (!address) {
-            throw new Error("Login dulu sebelum stake");
+            throw new Error("Log in before staking");
           }
 
           setSettlementState({

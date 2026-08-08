@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
       const meta = metadataMap[record.marketId] ?? {
         question: `Market #${record.marketId}`,
-        category: "Umum",
+        category: "General",
       };
       const totalYes = BigInt(market.totalYes);
       const totalNo = BigInt(market.totalNo);

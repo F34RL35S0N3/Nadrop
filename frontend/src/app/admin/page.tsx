@@ -52,7 +52,7 @@ export default function AdminPage() {
   const [rows, setRows] = useState<MarketRow[]>([]);
   const [status, setStatus] = useState<Status>({ text: "idle" });
   const [question, setQuestion] = useState("");
-  const [category, setCategory] = useState("Kripto");
+  const [category, setCategory] = useState("Crypto");
   const [minutes, setMinutes] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,7 +101,7 @@ export default function AdminPage() {
       const marketId = Number(body.marketId);
       const meta = {
         question: question.trim() || `Market #${marketId}`,
-        category: category.trim() || "Umum",
+        category: category.trim() || "General",
       };
       await saveMarketMeta(marketId, meta).catch(console.error);
 
@@ -135,7 +135,7 @@ export default function AdminPage() {
   async function resolveMarket(marketId: number, outcome: boolean) {
     setIsSubmitting(true);
     setStatus({
-      text: outcome ? `resolve #${marketId} YA` : `resolve #${marketId} TIDAK`,
+      text: outcome ? `resolve #${marketId} YES` : `resolve #${marketId} NO`,
     });
 
     try {
@@ -187,7 +187,7 @@ export default function AdminPage() {
             Admin
           </h1>
           <p className="text-sm text-[var(--color-chrome)]">
-            Verifikasi jawaban bid dan tambah soal market baru.
+            Verify market outcomes and add new market questions.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -220,7 +220,7 @@ export default function AdminPage() {
         className="mb-6 grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-chrome-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]"
       >
         <h2 className="font-data text-sm uppercase tracking-wider text-[var(--color-chrome)]">
-          Tambah Soal
+          Add Question
         </h2>
         <label className="grid gap-1">
           <span className="font-data text-xs text-[var(--color-chrome)]">
@@ -230,7 +230,7 @@ export default function AdminPage() {
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             className="rounded-[var(--radius-chip)] border border-[var(--color-chrome-border)] bg-[var(--color-base)] px-3 py-2 outline-none focus:border-[var(--color-ink)]"
-            placeholder="Akankah MON naik dalam 1 jam ke depan?"
+            placeholder="Will MON go up in the next hour?"
           />
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -246,7 +246,7 @@ export default function AdminPage() {
           </label>
           <label className="grid gap-1">
             <span className="font-data text-xs text-[var(--color-chrome)]">
-              Durasi menit
+            Duration minutes
             </span>
             <input
               type="number"
@@ -282,12 +282,12 @@ export default function AdminPage() {
             disabled={isSubmitting}
             className="rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-3 py-2 font-data text-xs text-[var(--color-chrome)] disabled:opacity-50"
           >
-            Refresh manual
+            Manual refresh
           </button>
         </div>
         {rows.length === 0 ? (
           <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center font-data text-xs text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
-            Kosong. Market baru akan muncul setelah dibuat.
+            Empty. New markets will appear after creation.
           </div>
         ) : null}
         {rows.slice(0, marketListLimit).map((market) => {
@@ -304,8 +304,8 @@ export default function AdminPage() {
                 </span>
                 <span>
                   {market.resolved
-                    ? `resolved: ${market.outcome ? "YA" : "TIDAK"}`
-                    : "menunggu verifikasi"}
+                    ? `resolved: ${market.outcome ? "YES" : "NO"}`
+                    : "waiting for verification"}
                 </span>
               </div>
               <h3 className="mb-4 font-display text-xl font-bold text-[var(--color-ink)]">
@@ -313,10 +313,10 @@ export default function AdminPage() {
               </h3>
               <div className="mb-4 grid gap-2 font-data text-sm sm:grid-cols-2">
                 <div className="rounded-[var(--radius-chip)] border border-[var(--color-yes-mid)] bg-[var(--color-yes-light)] p-3 text-[var(--color-yes)]">
-                  YA pool: {market.totalYes} mUSDC
+                  YES pool: {market.totalYes} mUSDC
                 </div>
                 <div className="rounded-[var(--radius-chip)] border border-[var(--color-no-mid)] bg-[var(--color-no-light)] p-3 text-[var(--color-no)]">
-                  TIDAK pool: {market.totalNo} mUSDC
+                  NO pool: {market.totalNo} mUSDC
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -326,7 +326,7 @@ export default function AdminPage() {
                   disabled={isSubmitting || market.resolved}
                   className="rounded-[var(--radius-button)] border border-[var(--color-yes-mid)] px-4 py-2 font-data text-sm text-[var(--color-yes)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Verifikasi jawaban: YA
+                  Verify answer: YES
                 </button>
                 <button
                   type="button"
@@ -334,13 +334,13 @@ export default function AdminPage() {
                   disabled={isSubmitting || market.resolved}
                   className="rounded-[var(--radius-button)] border border-[var(--color-no-mid)] px-4 py-2 font-data text-sm text-[var(--color-no)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Verifikasi jawaban: TIDAK
+                  Verify answer: NO
                 </button>
               </div>
               <div className="mt-3 font-data text-xs text-[var(--color-chrome)]">
                 {market.resolved
-                  ? "Market sudah diverifikasi dan tidak bisa diverifikasi ulang."
-                  : "Kalau TooEarly, market belum lewat deadline on-chain."}
+                  ? "This market has already been verified and cannot be verified again."
+                  : "If TooEarly appears, the on-chain deadline has not passed yet."}
               </div>
             </article>
           );

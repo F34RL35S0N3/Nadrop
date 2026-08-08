@@ -10,9 +10,9 @@ import { Market, Prediction } from "@/lib/types";
 type FilterTab = "semua" | "menang" | "kalah" | "pending";
 
 const FILTERS: { label: string; value: FilterTab }[] = [
-  { label: "Semua", value: "semua" },
-  { label: "Menang", value: "menang" },
-  { label: "Kalah", value: "kalah" },
+  { label: "All", value: "semua" },
+  { label: "Won", value: "menang" },
+  { label: "Lost", value: "kalah" },
   { label: "Pending", value: "pending" },
 ];
 
@@ -44,7 +44,7 @@ const emptyStats: HistoryStats = {
 function predictionToMarket(prediction: Prediction): Market {
   return {
     id: prediction.marketId,
-    category: "Riwayat",
+    category: "History",
     question: prediction.question,
     deadline: Date.now(),
     yesPercentage: 0,
@@ -52,9 +52,13 @@ function predictionToMarket(prediction: Prediction): Market {
     totalStake: prediction.stake,
     participants: 1,
     contractAddress: "",
-    resolveDescription: "Klaim dicek langsung dari kontrak.",
+    resolveDescription: "Claim eligibility is checked directly from the contract.",
     status: prediction.status === "pending" ? "active" : "resolved",
   };
+}
+
+function displayChoice(choice: Prediction["choice"]) {
+  return choice === "YA" ? "YES" : "NO";
 }
 
 function PredictionCard({
@@ -69,14 +73,14 @@ function PredictionCard({
   const statusConfig = {
     won: {
       icon: "✓",
-      label: "Menang",
+      label: "Won",
       color: "text-[var(--color-yes)]",
       bg: "bg-[var(--color-yes-light)]",
       border: "border-[var(--color-yes-mid)]",
     },
     lost: {
       icon: "✗",
-      label: "Kalah",
+      label: "Lost",
       color: "text-[var(--color-no)]",
       bg: "bg-[var(--color-no-light)]",
       border: "border-[var(--color-no-mid)]",
@@ -133,7 +137,7 @@ function PredictionCard({
                   : "bg-[var(--color-no-light)] text-[var(--color-no)]"
               }`}
             >
-              {prediction.choice}
+              {displayChoice(prediction.choice)}
             </span>
             <span className={`text-xs font-medium ${config.color}`}>
               {config.label}
@@ -159,7 +163,7 @@ function PredictionCard({
               </a>
             ) : (
               <span className="font-data text-[11px] text-[var(--color-chrome)]">
-                posisi terdeteksi on-chain
+                position detected on-chain
               </span>
             )}
             {prediction.settlementTime && (
@@ -204,7 +208,7 @@ export default function HistoryPage() {
       const data = (await response.json()) as HistoryResponse;
 
       if (!response.ok) {
-        throw new Error(data.details ?? data.error ?? "History gagal dibaca");
+        throw new Error(data.details ?? data.error ?? "Failed to load history");
       }
 
       setPredictions(data.predictions ?? []);
@@ -241,14 +245,14 @@ export default function HistoryPage() {
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-1">
-          Riwayat Prediksi
+          Prediction History
         </h1>
         <p className="text-sm text-[var(--color-chrome)]">
-          Semua prediksi kamu dan hasilnya
+          All your predictions and outcomes
         </p>
         {!isConnected ? (
           <p className="mt-2 text-sm text-[var(--color-no)]">
-            Login dulu untuk melihat riwayat real wallet kamu.
+            Log in to view real history for your wallet.
           </p>
         ) : null}
       </div>
@@ -260,7 +264,7 @@ export default function HistoryPage() {
           <div className="grid grid-cols-3 lg:grid-cols-1 gap-3 mb-4">
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between lg:mb-1">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Menang</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Won</span>
                 <span className="font-data text-xl lg:text-2xl font-bold text-[var(--color-yes)]">
                   {stats.wins}
                 </span>
@@ -268,7 +272,7 @@ export default function HistoryPage() {
             </div>
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between lg:mb-1">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Kalah</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Lost</span>
                 <span className="font-data text-xl lg:text-2xl font-bold text-[var(--color-no)]">
                   {stats.losses}
                 </span>
@@ -317,7 +321,7 @@ export default function HistoryPage() {
             </div>
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Total Prediksi</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Total Predictions</span>
                 <span className="font-data text-lg font-bold text-[var(--color-ink)]">
                   {stats.total}
                 </span>
@@ -352,7 +356,7 @@ export default function HistoryPage() {
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-lg font-bold text-[var(--color-ink)]">
-                    Klaim Reward
+                    Claim Reward
                   </h2>
                   <p className="text-sm text-[var(--color-chrome)]">
                     {selectedPrediction.question}
@@ -363,7 +367,7 @@ export default function HistoryPage() {
                   onClick={() => setSelectedPrediction(null)}
                   className="rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-3 py-2 font-data text-xs text-[var(--color-chrome)]"
                 >
-                  Tutup
+                  Close
                 </button>
               </div>
               <ClaimPanel
@@ -381,7 +385,7 @@ export default function HistoryPage() {
 
           {isLoading ? (
             <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center font-data text-xs text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
-              Loading history real...
+              Loading real history...
             </div>
           ) : null}
 
@@ -410,7 +414,7 @@ export default function HistoryPage() {
                     </svg>
                   </div>
                   <p className="text-sm text-[var(--color-chrome)]">
-                    Belum ada prediksi dengan filter ini.
+                    No predictions match this filter yet.
                   </p>
                 </motion.div>
               )}

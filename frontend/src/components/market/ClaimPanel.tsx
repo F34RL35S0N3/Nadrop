@@ -166,18 +166,18 @@ export function ClaimPanel({
 
     if (savedTxHash.status === "fulfilled" && savedTxHash.value) {
       setStatus({
-        text: "diklaim",
+        text: "claimed",
         txHash: savedTxHash.value,
       });
     } else if (claimed.status === "fulfilled" && claimed.value) {
       setStatus({
-        text: "diklaim",
+        text: "claimed",
         detailUrl: `${explorerAddressUrl}${userAddress}`,
-        notice: "Claim sudah tercatat on-chain. Tx hash lama belum ada di cache lokal.",
+        notice: "Claim is recorded on-chain. The old tx hash is not in the local cache.",
       });
     } else {
       setStatus((current) =>
-        current.text === "diklaim" ? { text: "idle" } : current,
+        current.text === "claimed" ? { text: "idle" } : current,
       );
     }
   }, [market, marketId, userAddress]);
@@ -214,7 +214,7 @@ export function ClaimPanel({
   }, [marketId, userAddress]);
 
   async function getWalletClient() {
-    if (!userAddress) throw new Error("Wallet belum login");
+    if (!userAddress) throw new Error("Wallet is not logged in");
 
     const wallet =
       wallets.find(
@@ -222,7 +222,7 @@ export function ClaimPanel({
           candidate.address.toLowerCase() === userAddress.toLowerCase(),
       ) ?? wallets[0];
 
-    if (!wallet) throw new Error("Wallet tidak ditemukan");
+    if (!wallet) throw new Error("Wallet not found");
 
     await wallet.switchChain(10143);
     const provider = (await wallet.getEthereumProvider()) as EIP1193Provider;
@@ -251,7 +251,7 @@ export function ClaimPanel({
       await saveClaimTxHash(marketId, userAddress as Address, txHash).catch(
         console.error,
       );
-      setStatus({ text: "diklaim", txHash });
+      setStatus({ text: "claimed", txHash });
       await refresh();
     } catch (error) {
       setStatus({ text: "error", error: extractError(error) });
@@ -279,7 +279,7 @@ export function ClaimPanel({
           onClick={openClaim}
           className="w-full rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-4 py-3 font-semibold text-[var(--color-ink)]"
         >
-          Cek klaim
+          Check claim
         </button>
       ) : null}
 
@@ -294,21 +294,21 @@ export function ClaimPanel({
 
       <div className="mb-3 grid grid-cols-2 gap-2 font-data text-xs">
         <div className="rounded-[var(--radius-badge)] bg-[var(--color-yes-light)] px-3 py-2 text-[var(--color-yes)]">
-          YA stake: {formatUsdc(claimState.yesStake)}
+          YES stake: {formatUsdc(claimState.yesStake)}
         </div>
         <div className="rounded-[var(--radius-badge)] bg-[var(--color-no-light)] px-3 py-2 text-[var(--color-no)]">
-          TIDAK stake: {formatUsdc(claimState.noStake)}
+          NO stake: {formatUsdc(claimState.noStake)}
         </div>
       </div>
 
       <p className="mb-3 text-sm text-[var(--color-chrome)]">
         {!claimState.resolved
-          ? "Klaim aktif setelah admin resolve market."
+          ? "Claim becomes available after admin resolves the market."
           : claimState.claimed
-            ? "Reward untuk market ini sudah diklaim."
+            ? "Reward for this market has already been claimed."
             : winningStake === BigInt(0)
-              ? "Nothing to claim. Kamu tidak punya stake di sisi pemenang."
-              : `Kamu menang di sisi ${claimState.outcome ? "YA" : "TIDAK"}.`}
+              ? "Nothing to claim. You do not have stake on the winning side."
+              : `You won on the ${claimState.outcome ? "YES" : "NO"} side.`}
       </p>
 
       <button
@@ -317,7 +317,7 @@ export function ClaimPanel({
         disabled={!canClaim || isSubmitting}
         className="w-full rounded-[var(--radius-button)] bg-[var(--color-ink)] px-4 py-3 font-semibold text-[var(--color-base)] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Klaim
+        Claim
       </button>
 
       <div className="mt-3 font-data text-xs text-[var(--color-chrome)]">
@@ -340,7 +340,7 @@ export function ClaimPanel({
           rel="noreferrer"
           className="mt-1 block break-all font-data text-xs text-[var(--color-yes)] underline"
         >
-          Buka riwayat address di explorer
+          Open address history in explorer
         </a>
       ) : null}
       {status.notice ? (

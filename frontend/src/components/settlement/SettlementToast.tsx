@@ -14,9 +14,9 @@ interface SettlementToastProps {
 
 const PHASE_LABELS: Record<SettlementState["phase"], string> = {
   idle: "",
-  sending: "mengirim taruhan",
-  facilitator: "menunggu facilitator",
-  verified: "terverifikasi",
+  sending: "sending stake",
+  facilitator: "waiting for facilitator",
+  verified: "verified",
   settled: "settled",
   error: "error",
 };
@@ -70,7 +70,7 @@ export function SettlementToast({
                     : "bg-[var(--color-no-light)] text-[var(--color-no)]"
                 }`}
               >
-                {isYes ? "YA" : "NO"}
+                {isYes ? "YES" : "NO"}
               </div>
               <div className="flex-1 min-w-0">
                 <span
@@ -78,7 +78,7 @@ export function SettlementToast({
                     isYes ? "text-[var(--color-yes)]" : "text-[var(--color-no)]"
                   }`}
                 >
-                  Prediksi {choice}
+                  Prediction {choice === "YA" ? "YES" : "NO"}
                 </span>
                 <p className="text-sm text-[var(--color-ink)] mt-0.5 line-clamp-2">
                   {question}
@@ -168,7 +168,7 @@ export function SettlementToast({
                     onClick={onDismiss}
                     className="text-xs text-[var(--color-chrome)] hover:text-[var(--color-ink)] transition-colors px-2 py-1"
                   >
-                    Tutup
+                    Close
                   </button>
                 </div>
               </div>

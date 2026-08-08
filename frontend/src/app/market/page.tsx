@@ -79,10 +79,10 @@ export default function MarketPage() {
             Login required
           </p>
           <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-3">
-            Login dulu untuk mulai swipe.
+            Log in to start swiping.
           </h1>
           <p className="text-sm text-[var(--color-chrome)] mb-6">
-            Pilih Privy email atau MetaMask di modal login.
+            Choose Privy email or MetaMask in the login modal.
           </p>
           <button
             type="button"
@@ -106,17 +106,17 @@ export default function MarketPage() {
           {/* Market Stats */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Statistik Market
+              Market Stats
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-ink)]">Market Aktif</span>
+                <span className="text-sm text-[var(--color-ink)]">Active Markets</span>
                 <span className="font-data text-sm font-medium text-[var(--color-yes)]">
                   {remainingCount}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-ink)]">Total Prediksi</span>
+                <span className="text-sm text-[var(--color-ink)]">Total Predictions</span>
                 <span className="font-data text-sm font-medium text-[var(--color-ink)]">
                   {totalPredictions}
                 </span>
@@ -141,7 +141,7 @@ export default function MarketPage() {
             <div className="space-y-2.5">
               {leaderboard.length === 0 ? (
                 <p className="py-4 text-center font-data text-xs text-[var(--color-chrome)]">
-                  Belum ada ranking real.
+                  No real rankings yet.
                 </p>
               ) : null}
               {leaderboard.slice(0, 5).map((entry) => (
@@ -186,7 +186,7 @@ export default function MarketPage() {
           {hasMore && (
             <div className="mb-4 text-center">
               <span className="text-xs text-[var(--color-chrome)]">
-                <span className="font-data">{remainingCount}</span> market tersedia
+                <span className="font-data">{remainingCount}</span> markets available
               </span>
             </div>
           )}
@@ -216,7 +216,7 @@ export default function MarketPage() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M10 4L6 8L10 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                TIDAK
+                NO
               </button>
               <button
                 onClick={() => {
@@ -240,7 +240,7 @@ export default function MarketPage() {
                 className="flex items-center gap-2 px-6 py-3 rounded-[var(--radius-button)] border border-[var(--color-yes-mid)] text-[var(--color-yes)] text-sm font-medium hover:bg-[var(--color-yes-light)] transition-colors duration-200"
                 id="desktop-btn-yes"
               >
-                YA
+                YES
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -254,7 +254,7 @@ export default function MarketPage() {
           {/* Recent Predictions */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Prediksi Terbaru
+              Latest Predictions
             </h3>
             {predictions.length > 0 ? (
               <div className="space-y-2.5">
@@ -290,7 +290,7 @@ export default function MarketPage() {
                               : "text-[var(--color-no)]"
                           }`}
                         >
-                          {pred.choice}
+                          {pred.choice === "YA" ? "YES" : "NO"}
                         </span>
                         {pred.settlementTime && (
                           <span className="font-data text-[10px] text-[var(--color-chrome)]">
@@ -304,7 +304,7 @@ export default function MarketPage() {
               </div>
             ) : (
               <p className="text-xs text-[var(--color-chrome)] py-4 text-center">
-                Swipe market untuk mulai prediksi.
+                Swipe a market to start predicting.
               </p>
             )}
           </div>
@@ -312,14 +312,14 @@ export default function MarketPage() {
           {/* How it works */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Cara Kerja
+              How It Works
             </h3>
             <div className="space-y-3">
               {[
-                { step: "1", label: "Swipe kanan YA, kiri TIDAK, atas SKIP" },
-                { step: "2", label: "Stake otomatis 1 mUSDC per prediksi" },
-                { step: "3", label: "Settlement instan via x402 protocol" },
-                { step: "4", label: "Menang? Klaim profit langsung" },
+                { step: "1", label: "Swipe right YES, left NO, up SKIP" },
+                { step: "2", label: "Automatically stake 1 mUSDC per prediction" },
+                { step: "3", label: "Instant settlement via x402 protocol" },
+                { step: "4", label: "Win? Claim your profit instantly" },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-2.5">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-yes-light)] text-[var(--color-yes)] flex items-center justify-center text-[10px] font-bold">

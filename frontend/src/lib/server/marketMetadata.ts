@@ -1,4 +1,4 @@
-import { getMarketMeta } from "@/lib/markets";
+import { getMarketMeta, normalizeMarketMeta } from "@/lib/markets";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 type MarketMeta = {
@@ -29,10 +29,10 @@ export async function readMarketMetadataMap() {
   const metadata = Object.fromEntries(
     data.map((row) => [
       Number(row.market_id),
-      {
+      normalizeMarketMeta({
         question: String(row.question),
         category: String(row.category),
-      },
+      }),
     ]),
   );
 

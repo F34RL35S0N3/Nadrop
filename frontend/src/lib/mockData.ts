@@ -3,8 +3,8 @@ import { Market, Prediction, LeaderboardEntry } from "./types";
 export const MOCK_MARKETS: Market[] = [
   {
     id: "market-1",
-    category: "Kripto",
-    question: "Akankah MON menembus $5 dalam 1 jam ke depan?",
+    category: "Crypto",
+    question: "Will MON break $5 in the next hour?",
     deadline: Date.now() + 47 * 60 * 1000 + 12 * 1000,
     yesPercentage: 62,
     noPercentage: 38,
@@ -12,13 +12,13 @@ export const MOCK_MARKETS: Market[] = [
     participants: 187,
     contractAddress: "0x1a2b3c4d5e6f7890abcdef1234567890abcdef12",
     resolveDescription:
-      "Market ini di-resolve berdasarkan harga MON di CoinGecko pada saat deadline. Jika harga ≥ $5.00, hasil = YA.",
+      "This market resolves using the MON price on CoinGecko at the deadline. If price is at least $5.00, the outcome is YES.",
     status: "active",
   },
   {
     id: "market-2",
     category: "DeFi",
-    question: "Akankah TVL Monad melewati $100M minggu ini?",
+    question: "Will Monad TVL pass $100M this week?",
     deadline: Date.now() + 3 * 24 * 60 * 60 * 1000,
     yesPercentage: 45,
     noPercentage: 55,
@@ -26,13 +26,13 @@ export const MOCK_MARKETS: Market[] = [
     participants: 312,
     contractAddress: "0x2b3c4d5e6f7890abcdef1234567890abcdef1234",
     resolveDescription:
-      "Market ini di-resolve berdasarkan data DeFiLlama untuk TVL Monad. Jika TVL ≥ $100M sebelum Minggu 23:59 UTC, hasil = YA.",
+      "This market resolves using DeFiLlama data for Monad TVL. If TVL is at least $100M before Sunday 23:59 UTC, the outcome is YES.",
     status: "active",
   },
   {
     id: "market-3",
-    category: "Ekosistem",
-    question: "Apakah Monad akan meluncurkan fitur baru di testnet bulan ini?",
+    category: "Ecosystem",
+    question: "Will Monad launch a new testnet feature this month?",
     deadline: Date.now() + 7 * 24 * 60 * 60 * 1000,
     yesPercentage: 78,
     noPercentage: 22,
@@ -40,13 +40,13 @@ export const MOCK_MARKETS: Market[] = [
     participants: 95,
     contractAddress: "0x3c4d5e6f7890abcdef1234567890abcdef123456",
     resolveDescription:
-      "Market ini di-resolve berdasarkan pengumuman resmi dari tim Monad di Twitter/Discord sebelum akhir bulan.",
+      "This market resolves using official Monad team announcements on Twitter/Discord before month-end.",
     status: "active",
   },
   {
     id: "market-4",
-    category: "Kripto",
-    question: "Akankah ETH di atas $4000 saat market ini berakhir?",
+    category: "Crypto",
+    question: "Will ETH be above $4000 when this market ends?",
     deadline: Date.now() + 2 * 60 * 60 * 1000,
     yesPercentage: 33,
     noPercentage: 67,
@@ -54,13 +54,13 @@ export const MOCK_MARKETS: Market[] = [
     participants: 521,
     contractAddress: "0x4d5e6f7890abcdef1234567890abcdef12345678",
     resolveDescription:
-      "Market ini di-resolve berdasarkan harga ETH/USD di Chainlink oracle pada saat deadline.",
+      "This market resolves using the ETH/USD Chainlink oracle price at the deadline.",
     status: "active",
   },
   {
     id: "market-5",
     category: "NFT",
-    question: "Apakah volume trading NFT di Monad akan naik 50% hari ini?",
+    question: "Will Monad NFT trading volume rise 50% today?",
     deadline: Date.now() + 12 * 60 * 60 * 1000,
     yesPercentage: 41,
     noPercentage: 59,
@@ -68,7 +68,7 @@ export const MOCK_MARKETS: Market[] = [
     participants: 43,
     contractAddress: "0x5e6f7890abcdef1234567890abcdef1234567890",
     resolveDescription:
-      "Dibandingkan volume trading NFT kemarin (24h), jika volume hari ini naik ≥ 50%, hasil = YA.",
+      "Compared with yesterday's NFT trading volume over 24h, if today's volume rises at least 50%, the outcome is YES.",
     status: "active",
   },
 ];
@@ -77,7 +77,7 @@ export const MOCK_PREDICTIONS: Prediction[] = [
   {
     id: "pred-1",
     marketId: "market-1",
-    question: "Akankah MON menembus $5 dalam 1 jam ke depan?",
+    question: "Will MON break $5 in the next hour?",
     choice: "YA",
     stake: 10,
     status: "won",
@@ -89,7 +89,7 @@ export const MOCK_PREDICTIONS: Prediction[] = [
   {
     id: "pred-2",
     marketId: "market-2",
-    question: "Akankah TVL Monad melewati $100M minggu ini?",
+    question: "Will Monad TVL pass $100M this week?",
     choice: "TIDAK",
     stake: 10,
     status: "lost",
@@ -101,7 +101,7 @@ export const MOCK_PREDICTIONS: Prediction[] = [
   {
     id: "pred-3",
     marketId: "market-3",
-    question: "Apakah Monad akan meluncurkan fitur baru di testnet bulan ini?",
+    question: "Will Monad launch a new testnet feature this month?",
     choice: "YA",
     stake: 10,
     status: "pending",
@@ -113,7 +113,7 @@ export const MOCK_PREDICTIONS: Prediction[] = [
   {
     id: "pred-4",
     marketId: "market-4",
-    question: "Akankah ETH di atas $4000 saat market ini berakhir?",
+    question: "Will ETH be above $4000 when this market ends?",
     choice: "TIDAK",
     stake: 10,
     status: "won",
@@ -207,7 +207,7 @@ export const MOCK_LEADERBOARD: LeaderboardEntry[] = [
   },
 ];
 
-export const STAKE_AMOUNT = 10; // Fixed stake for MVP
+export const STAKE_AMOUNT = 10;
 
 export const MONAD_TESTNET_EXPLORER = "https://testnet.monadvision.com";
 
@@ -217,14 +217,14 @@ export function truncateAddress(address: string): string {
 
 export function formatCountdown(deadline: number): string {
   const diff = deadline - Date.now();
-  if (diff <= 0) return "Berakhir";
+  if (diff <= 0) return "Ended";
 
   const days = Math.floor(diff / (24 * 60 * 60 * 1000));
   const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
   const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
   const seconds = Math.floor((diff % (60 * 1000)) / 1000);
 
-  if (days > 0) return `${days}h ${hours}j`;
+  if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }

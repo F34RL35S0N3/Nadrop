@@ -33,7 +33,7 @@ export function MarketCard({ market, isTop = false }: MarketCardProps) {
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-live)] animate-live-pulse" />
             <span className="font-data text-xs text-[var(--color-chrome)]">
-              Berakhir {countdown}
+              Ends {countdown}
             </span>
           </div>
         </div>
@@ -58,7 +58,7 @@ export function MarketCard({ market, isTop = false }: MarketCardProps) {
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-chrome-border)]">
           <div className="flex items-center gap-3">
             <span className="text-xs text-[var(--color-chrome)]">
-              <span className="font-data">{market.participants}</span> peserta
+              <span className="font-data">{market.participants}</span> players
             </span>
             <span className="text-xs text-[var(--color-chrome)]">
               <span className="font-data">{market.totalStake}</span> mUSDC staked
@@ -89,7 +89,7 @@ export function MarketCard({ market, isTop = false }: MarketCardProps) {
                 }}
               />
             </svg>
-            kontrak & riwayat
+            contract & history
           </button>
         </div>
       </div>
@@ -106,13 +106,13 @@ export function MarketCard({ market, isTop = false }: MarketCardProps) {
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M9 3L5 7L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            TIDAK
+            NO
           </span>
           <span className="text-[10px] text-[var(--color-chrome)]">
-            atas untuk skip
+            swipe up to skip
           </span>
           <span className="text-xs text-[var(--color-yes)] font-medium flex items-center gap-1">
-            YA
+            YES
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M5 3L9 7L5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

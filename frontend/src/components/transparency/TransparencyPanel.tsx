@@ -29,7 +29,7 @@ export function TransparencyPanel({ market }: TransparencyPanelProps) {
       {/* Resolve Mechanism */}
       <div className="mb-3">
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-chrome)] font-medium block mb-1">
-          Mekanisme Resolve
+          Resolution Mechanism
         </span>
         <p className="text-xs text-[var(--color-ink)] leading-relaxed">
           {market.resolveDescription}
@@ -67,7 +67,7 @@ export function TransparencyPanel({ market }: TransparencyPanelProps) {
           <path d="M4 2H2V10H10V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M6 6L11 1M11 1H8M11 1V4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        Lihat di Monadscan
+        View on MonadVision
       </a>
     </div>
   );

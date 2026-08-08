@@ -42,10 +42,10 @@ export function CardStack({
           </svg>
         </div>
         <p className="text-base font-medium text-[var(--color-ink)] mb-1">
-          Semua market sudah di-swipe
+          All markets have been swiped
         </p>
         <p className="text-sm text-[var(--color-chrome)] text-center">
-          Cek lagi sebentar lagi untuk market baru.
+          Check back soon for new markets.
         </p>
       </div>
     );

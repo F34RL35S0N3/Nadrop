@@ -38,7 +38,7 @@ export async function GET() {
     for (const record of records) {
       const meta = metadataMap[record.marketId] ?? {
         question: `Market #${record.marketId}`,
-        category: "Umum",
+        category: "General",
       };
       const snapshot = marketMap.get(record.marketId);
       const row =
