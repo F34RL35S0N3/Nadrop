@@ -46,15 +46,15 @@ export function useSwipePredict() {
 
       void (async () => {
         const startedAt = performance.now();
-        const choice = direction === "right" ? "YA" : "TIDAK";
+        const choice = direction === "right" ? "YES" : "NO";
 
         try {
           if (market.status !== "active") {
-            throw new Error("Market sudah ditutup, swipe atas untuk skip");
+            throw new Error("Market is closed, swipe up to skip");
           }
 
           if (!address) {
-            throw new Error("Login dulu sebelum stake");
+            throw new Error("Please log in before staking");
           }
 
           setSettlementState({

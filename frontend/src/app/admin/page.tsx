@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { NetworkBadge, WalletChip } from "@/components/shared/WalletChip";
 import { readMarket, readNextMarketId, type Market } from "@/lib/contract";
-import { getResolvedMarketMeta, saveCustomMarketMeta } from "@/lib/markets";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
 const marketListLimit = 8;
@@ -63,7 +62,7 @@ export default function AdminPage() {
   const [rows, setRows] = useState<MarketRow[]>([]);
   const [status, setStatus] = useState<Status>({ text: "idle" });
   const [question, setQuestion] = useState("");
-  const [category, setCategory] = useState("Kripto");
+  const [category, setCategory] = useState("Crypto");
   const [minutes, setMinutes] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -86,6 +85,7 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh().catch((error) => {
       setStatus({
         text: "error",
@@ -113,7 +113,11 @@ export default function AdminPage() {
           "Content-Type": "application/json",
           "x-admin-secret": process.env.NEXT_PUBLIC_ADMIN_SECRET ?? "",
         },
-        body: JSON.stringify({ deadline }),
+        body: JSON.stringify({
+          question: question.trim() || `Market #${Date.now()}`,
+          category: category.trim() || "General",
+          deadline,
+        }),
       });
       const body = await readJson(response);
 
@@ -123,10 +127,6 @@ export default function AdminPage() {
       }
 
       const marketId = Number(body.marketId);
-      saveCustomMarketMeta(marketId, {
-        question: question.trim() || `Market #${marketId}`,
-        category: category.trim() || "Umum",
-      });
 
       setQuestion("");
       setStatus({
@@ -147,7 +147,7 @@ export default function AdminPage() {
   async function resolveMarket(marketId: number, outcome: boolean) {
     setIsSubmitting(true);
     setStatus({
-      text: outcome ? `resolve #${marketId} YA` : `resolve #${marketId} TIDAK`,
+      text: outcome ? `resolve #${marketId} YES` : `resolve #${marketId} NO`,
     });
 
     try {
@@ -189,7 +189,7 @@ export default function AdminPage() {
             Admin
           </h1>
           <p className="text-sm text-[var(--color-chrome)]">
-            Verifikasi jawaban bid dan tambah soal market baru.
+            Verify answers and create new markets.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export default function AdminPage() {
         className="mb-6 grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-chrome-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]"
       >
         <h2 className="font-data text-sm uppercase tracking-wider text-[var(--color-chrome)]">
-          Tambah Soal
+          Add Question
         </h2>
         <label className="grid gap-1">
           <span className="font-data text-xs text-[var(--color-chrome)]">
@@ -232,7 +232,7 @@ export default function AdminPage() {
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             className="rounded-[var(--radius-chip)] border border-[var(--color-chrome-border)] bg-[var(--color-base)] px-3 py-2 outline-none focus:border-[var(--color-ink)]"
-            placeholder="Akankah MON naik dalam 1 jam ke depan?"
+            placeholder="Will MON go up in the next hour?"
           />
         </label>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -248,7 +248,7 @@ export default function AdminPage() {
           </label>
           <label className="grid gap-1">
             <span className="font-data text-xs text-[var(--color-chrome)]">
-              Durasi menit
+              Duration (minutes)
             </span>
             <input
               type="number"
@@ -273,7 +273,7 @@ export default function AdminPage() {
           Market List
         </h2>
         {rows.map(({ id, market }) => {
-          const meta = getResolvedMarketMeta(id);
+          // eslint-disable-next-line react-hooks/purity
           const expired = Date.now() >= Number(market.deadline) * 1000;
           const canResolve = expired && !market.resolved;
 
@@ -284,25 +284,25 @@ export default function AdminPage() {
             >
               <div className="mb-2 flex flex-wrap justify-between gap-3 font-data text-xs text-[var(--color-chrome)]">
                 <span>
-                  [{meta.category}] market #{id}
+                  [{market.category}] market #{id}
                 </span>
                 <span>
                   {market.resolved
-                    ? `resolved: ${market.outcome ? "YA" : "TIDAK"}`
+                    ? `resolved: ${market.outcome ? "YES" : "NO"}`
                     : expired
-                      ? "menunggu resolve"
-                      : `berakhir ${formatCountdown(market.deadline)}`}
+                      ? "waiting for resolution"
+                      : `ends in ${formatCountdown(market.deadline)}`}
                 </span>
               </div>
               <h3 className="mb-4 font-display text-xl font-bold text-[var(--color-ink)]">
-                {meta.question}
+                {market.question}
               </h3>
               <div className="mb-4 grid gap-2 font-data text-sm sm:grid-cols-2">
                 <div className="rounded-[var(--radius-chip)] border border-[var(--color-yes-mid)] bg-[var(--color-yes-light)] p-3 text-[var(--color-yes)]">
-                  YA pool: {formatUsdc(market.totalYes)}
+                  YES pool: {formatUsdc(market.totalYes)}
                 </div>
                 <div className="rounded-[var(--radius-chip)] border border-[var(--color-no-mid)] bg-[var(--color-no-light)] p-3 text-[var(--color-no)]">
-                  TIDAK pool: {formatUsdc(market.totalNo)}
+                  NO pool: {formatUsdc(market.totalNo)}
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -312,7 +312,7 @@ export default function AdminPage() {
                   disabled={isSubmitting || !canResolve}
                   className="rounded-[var(--radius-button)] border border-[var(--color-yes-mid)] px-4 py-2 font-data text-sm text-[var(--color-yes)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Verifikasi jawaban: YA
+                  Verify answer: YES
                 </button>
                 <button
                   type="button"
@@ -320,12 +320,12 @@ export default function AdminPage() {
                   disabled={isSubmitting || !canResolve}
                   className="rounded-[var(--radius-button)] border border-[var(--color-no-mid)] px-4 py-2 font-data text-sm text-[var(--color-no)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Verifikasi jawaban: TIDAK
+                  Verify answer: NO
                 </button>
               </div>
               {!canResolve && !market.resolved ? (
                 <div className="mt-3 font-data text-xs text-[var(--color-chrome)]">
-                  aktif setelah deadline
+                  active after deadline
                 </div>
               ) : null}
             </article>

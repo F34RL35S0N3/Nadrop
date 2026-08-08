@@ -112,26 +112,26 @@ export function ClaimPanel({ market }: { market: Market | null }) {
 
     if (claimed) {
       setStatus({
-        text: "diklaim",
+        text: "claimed",
       });
 
       readLatestClaimTxHash(marketId, userAddress)
         .then((txHash) => {
           setStatus({
-            text: "diklaim",
+            text: "claimed",
             txHash: txHash ?? undefined,
-            error: txHash ? undefined : "Tx claim sudah terjadi, hash belum ditemukan dari RPC logs.",
+            error: txHash ? undefined : "Claim tx occurred, hash not found in RPC logs.",
           });
         })
         .catch((error) => {
           setStatus({
-            text: "diklaim",
-            error: `Tx claim sudah terjadi, detail log gagal dibaca: ${extractError(error)}`,
+            text: "claimed",
+            error: `Claim tx occurred, failed to read log details: ${extractError(error)}`,
           });
         });
     } else {
       setStatus((current) =>
-        current.text === "diklaim" ? { text: "idle" } : current,
+        current.text === "claimed" ? { text: "idle" } : current,
       );
     }
   }, [market, marketId, userAddress]);
@@ -139,6 +139,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
   useEffect(() => {
     if (!isOpen) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh().catch((error) => {
       setHasLoaded(true);
       setStatus({ text: "error", error: extractError(error) });
@@ -152,7 +153,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
   }, [isOpen, refresh]);
 
   async function getWalletClient() {
-    if (!userAddress) throw new Error("Wallet belum login");
+    if (!userAddress) throw new Error("Wallet not logged in");
 
     const wallet =
       wallets.find(
@@ -160,7 +161,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
           candidate.address.toLowerCase() === userAddress.toLowerCase(),
       ) ?? wallets[0];
 
-    if (!wallet) throw new Error("Wallet tidak ditemukan");
+    if (!wallet) throw new Error("Wallet not found");
 
     await wallet.switchChain(10143);
     const provider = (await wallet.getEthereumProvider()) as EIP1193Provider;
@@ -186,7 +187,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       });
 
       await publicClient.waitForTransactionReceipt({ hash: txHash });
-      setStatus({ text: "diklaim", txHash });
+      setStatus({ text: "claimed", txHash });
       await refresh();
     } catch (error) {
       setStatus({ text: "error", error: extractError(error) });
@@ -214,7 +215,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
           onClick={() => setIsOpen(true)}
           className="w-full rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-4 py-3 font-semibold text-[var(--color-ink)]"
         >
-          Cek klaim
+          Check claim
         </button>
       ) : null}
 
@@ -229,21 +230,21 @@ export function ClaimPanel({ market }: { market: Market | null }) {
 
       <div className="mb-3 grid grid-cols-2 gap-2 font-data text-xs">
         <div className="rounded-[var(--radius-badge)] bg-[var(--color-yes-light)] px-3 py-2 text-[var(--color-yes)]">
-          YA stake: {formatUsdc(claimState.yesStake)}
+          YES stake: {formatUsdc(claimState.yesStake)}
         </div>
         <div className="rounded-[var(--radius-badge)] bg-[var(--color-no-light)] px-3 py-2 text-[var(--color-no)]">
-          TIDAK stake: {formatUsdc(claimState.noStake)}
+          NO stake: {formatUsdc(claimState.noStake)}
         </div>
       </div>
 
       <p className="mb-3 text-sm text-[var(--color-chrome)]">
         {!claimState.resolved
-          ? "Klaim aktif setelah admin resolve market."
+          ? "Claim active after admin resolves market."
           : claimState.claimed
-            ? "Reward untuk market ini sudah diklaim."
+            ? "Reward for this market has been claimed."
             : winningStake === BigInt(0)
-              ? "Nothing to claim. Kamu tidak punya stake di sisi pemenang."
-              : `Kamu menang di sisi ${claimState.outcome ? "YA" : "TIDAK"}.`}
+              ? "Nothing to claim. You have no stake on the winning side."
+              : `You won on the ${claimState.outcome ? "YES" : "NO"} side.`}
       </p>
 
       <button
@@ -252,7 +253,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
         disabled={!canClaim || isSubmitting}
         className="w-full rounded-[var(--radius-button)] bg-[var(--color-ink)] px-4 py-3 font-semibold text-[var(--color-base)] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Klaim
+        Claim
       </button>
 
       <div className="mt-3 font-data text-xs text-[var(--color-chrome)]">

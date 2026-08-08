@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useWallet } from "@/components/providers/WalletProvider";
 
 const NAV_ITEMS = [
   {
@@ -15,7 +16,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Riwayat",
+    label: "Analysis History",
     href: "/history",
     icon: (active: boolean) => (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -25,7 +26,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    label: "Peringkat",
+    label: "Top Analysts",
     href: "/leaderboard",
     icon: (active: boolean) => (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35,21 +36,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
-  {
-    label: "Admin",
-    href: "/admin",
-    icon: (active: boolean) => (
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 3L16 6.5V13.5L10 17L4 13.5V6.5L10 3Z" stroke={active ? "var(--color-yes)" : "var(--color-chrome)"} strokeWidth="1.5" fill={active ? "var(--color-yes-light)" : "none"} />
-        <path d="M10 8V12" stroke={active ? "var(--color-yes)" : "var(--color-chrome)"} strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M7.8 10H12.2" stroke={active ? "var(--color-yes)" : "var(--color-chrome)"} strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { isConnected } = useWallet();
+
+  if (!isConnected) {
+    return null;
+  }
 
   return (
     <>

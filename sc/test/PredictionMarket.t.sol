@@ -28,7 +28,7 @@ contract PredictionMarketTest is Test {
     }
 
     function testStakeFlowUpdatesTotalsAndUserStake() public {
-        uint256 marketId = predictionMarket.createMarket(uint64(block.timestamp + 1 hours));
+        uint256 marketId = predictionMarket.createMarket("Will MON pump?", "Crypto", uint64(block.timestamp + 1 hours));
 
         vm.prank(backend);
         predictionMarket.stakeFor(alice, marketId, true, ONE_USDC);
@@ -43,7 +43,7 @@ contract PredictionMarketTest is Test {
     }
 
     function testPariMutuelNinetyFiveFiveMathCorrectOnClaim() public {
-        uint256 marketId = predictionMarket.createMarket(uint64(block.timestamp + 1 hours));
+        uint256 marketId = predictionMarket.createMarket("Will MON pump?", "Crypto", uint64(block.timestamp + 1 hours));
 
         vm.startPrank(backend);
         predictionMarket.stakeFor(alice, marketId, true, 2 * ONE_USDC);
@@ -64,7 +64,7 @@ contract PredictionMarketTest is Test {
     }
 
     function testDoubleClaimRevertsAlreadyClaimed() public {
-        uint256 marketId = predictionMarket.createMarket(uint64(block.timestamp + 1 hours));
+        uint256 marketId = predictionMarket.createMarket("Will MON pump?", "Crypto", uint64(block.timestamp + 1 hours));
 
         vm.prank(backend);
         predictionMarket.stakeFor(alice, marketId, true, ONE_USDC);
@@ -81,7 +81,7 @@ contract PredictionMarketTest is Test {
     }
 
     function testClaimBeforeResolveRevertsMarketNotResolved() public {
-        uint256 marketId = predictionMarket.createMarket(uint64(block.timestamp + 1 hours));
+        uint256 marketId = predictionMarket.createMarket("Will MON pump?", "Crypto", uint64(block.timestamp + 1 hours));
 
         vm.prank(backend);
         predictionMarket.stakeFor(alice, marketId, true, ONE_USDC);
@@ -92,7 +92,7 @@ contract PredictionMarketTest is Test {
     }
 
     function testStakeAfterDeadlineRevertsMarketClosed() public {
-        uint256 marketId = predictionMarket.createMarket(uint64(block.timestamp + 1 hours));
+        uint256 marketId = predictionMarket.createMarket("Will MON pump?", "Crypto", uint64(block.timestamp + 1 hours));
 
         vm.warp(block.timestamp + 1 hours);
 
@@ -102,7 +102,7 @@ contract PredictionMarketTest is Test {
     }
 
     function testLoserClaimRevertsNothingToClaim() public {
-        uint256 marketId = predictionMarket.createMarket(uint64(block.timestamp + 1 hours));
+        uint256 marketId = predictionMarket.createMarket("Will MON pump?", "Crypto", uint64(block.timestamp + 1 hours));
 
         vm.startPrank(backend);
         predictionMarket.stakeFor(alice, marketId, true, ONE_USDC);

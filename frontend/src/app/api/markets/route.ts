@@ -16,12 +16,18 @@ import {
 const CREATE_MARKET_ABI = {
   name: "createMarket",
   type: "function",
-  inputs: [{ name: "deadline", type: "uint64" }],
+  inputs: [
+    { name: "question", type: "string" },
+    { name: "category", type: "string" },
+    { name: "deadline", type: "uint64" }
+  ],
   outputs: [{ name: "marketId", type: "uint256" }],
   stateMutability: "nonpayable",
 } as const;
 
 type CreateMarketBody = {
+  question: string;
+  category: string;
   deadline: number;
 };
 
@@ -33,7 +39,12 @@ function isCreateMarketBody(value: unknown): value is CreateMarketBody {
   if (!value || typeof value !== "object") return false;
 
   const body = value as Record<string, unknown>;
-  return typeof body.deadline === "number" && Number.isFinite(body.deadline);
+  return (
+    typeof body.question === "string" &&
+    typeof body.category === "string" &&
+    typeof body.deadline === "number" &&
+    Number.isFinite(body.deadline)
+  );
 }
 
 function getBackendPrivateKey() {
@@ -85,7 +96,7 @@ export async function POST(request: NextRequest) {
       address: getAddress(PREDICTION_MARKET_ADDRESS),
       abi: [CREATE_MARKET_ABI],
       functionName: "createMarket",
-      args: [BigInt(body.deadline)],
+      args: [body.question, body.category, BigInt(body.deadline)],
     });
 
     const receipt = await localPublicClient.waitForTransactionReceipt({

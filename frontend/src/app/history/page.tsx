@@ -4,16 +4,16 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClaimPanel } from "@/components/market/ClaimPanel";
 import { useMarkets } from "@/hooks/useMarkets";
-import { MOCK_PREDICTIONS } from "@/lib/mockData";
+import { useHistory } from "@/hooks/useHistory";
 import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
 import { Prediction } from "@/lib/types";
 
-type FilterTab = "semua" | "menang" | "kalah" | "pending";
+type FilterTab = "all" | "won" | "lost" | "pending";
 
 const FILTERS: { label: string; value: FilterTab }[] = [
-  { label: "Semua", value: "semua" },
-  { label: "Menang", value: "menang" },
-  { label: "Kalah", value: "kalah" },
+  { label: "All", value: "all" },
+  { label: "Accurate", value: "won" },
+  { label: "Inaccurate", value: "lost" },
   { label: "Pending", value: "pending" },
 ];
 
@@ -21,14 +21,14 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
   const statusConfig = {
     won: {
       icon: "✓",
-      label: "Menang",
+      label: "Accurate",
       color: "text-[var(--color-yes)]",
       bg: "bg-[var(--color-yes-light)]",
       border: "border-[var(--color-yes-mid)]",
     },
     lost: {
       icon: "✗",
-      label: "Kalah",
+      label: "Inaccurate",
       color: "text-[var(--color-no)]",
       bg: "bg-[var(--color-no-light)]",
       border: "border-[var(--color-no-mid)]",
@@ -69,7 +69,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
           <div className="flex items-center gap-2 mb-2">
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-[var(--radius-badge)] text-xs font-bold ${
-                prediction.choice === "YA"
+                prediction.choice === "YES"
                   ? "bg-[var(--color-yes-light)] text-[var(--color-yes)]"
                   : "bg-[var(--color-no-light)] text-[var(--color-no)]"
               }`}
@@ -102,7 +102,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
               </span>
             )}
             <span className="font-data text-[11px] text-[var(--color-chrome)]">
-              stake: {prediction.stake} MON
+              contribution: {prediction.stake} MON
             </span>
           </div>
         </div>
@@ -112,23 +112,24 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
 }
 
 export default function HistoryPage() {
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("semua");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const { markets: closedMarkets } = useMarkets({ status: "closed" });
+  const { predictions, isLoading } = useHistory();
 
-  const filteredPredictions = MOCK_PREDICTIONS.filter((p) => {
-    if (activeFilter === "semua") return true;
-    if (activeFilter === "menang") return p.status === "won";
-    if (activeFilter === "kalah") return p.status === "lost";
+  const filteredPredictions = predictions.filter((p) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "won") return p.status === "won";
+    if (activeFilter === "lost") return p.status === "lost";
     if (activeFilter === "pending") return p.status === "pending";
     return true;
   });
 
   // Summary stats
-  const totalWins = MOCK_PREDICTIONS.filter((p) => p.status === "won").length;
-  const totalLosses = MOCK_PREDICTIONS.filter((p) => p.status === "lost").length;
-  const totalPending = MOCK_PREDICTIONS.filter((p) => p.status === "pending").length;
-  const totalProfit = MOCK_PREDICTIONS.reduce(
-    (sum, p) => sum + (p.payout || 0) - p.stake,
+  const totalWins = predictions.filter((p) => p.status === "won").length;
+  const totalLosses = predictions.filter((p) => p.status === "lost").length;
+  const totalPending = predictions.filter((p) => p.status === "pending").length;
+  const totalProfit = predictions.reduce(
+    (sum, p) => sum + (p.payout || 0) - (p.payout ? p.stake : 0),
     0
   );
   const winRate =
@@ -141,20 +142,20 @@ export default function HistoryPage() {
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-1">
-          Riwayat Prediksi
+          Analysis History
         </h1>
         <p className="text-sm text-[var(--color-chrome)]">
-          Semua prediksi kamu dan hasilnya
+          All your sentiment analysis and outcomes
         </p>
       </div>
 
       <section className="mb-6">
         <div className="mb-3">
           <h2 className="font-display text-xl font-bold text-[var(--color-ink)]">
-            Klaim Reward
+            Claim Reward
           </h2>
           <p className="text-sm text-[var(--color-chrome)]">
-            Market yang sudah berakhir atau resolved muncul di sini.
+            Markets that have ended or resolved appear here.
           </p>
         </div>
 
@@ -179,7 +180,7 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center text-sm text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
-            Belum ada market selesai untuk diklaim.
+            No completed markets to claim yet.
           </div>
         )}
       </section>
@@ -191,7 +192,7 @@ export default function HistoryPage() {
           <div className="grid grid-cols-3 lg:grid-cols-1 gap-3 mb-4">
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between lg:mb-1">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Menang</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Accurate</span>
                 <span className="font-data text-xl lg:text-2xl font-bold text-[var(--color-yes)]">
                   {totalWins}
                 </span>
@@ -199,7 +200,7 @@ export default function HistoryPage() {
             </div>
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between lg:mb-1">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Kalah</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Inaccurate</span>
                 <span className="font-data text-xl lg:text-2xl font-bold text-[var(--color-no)]">
                   {totalLosses}
                 </span>
@@ -207,7 +208,7 @@ export default function HistoryPage() {
             </div>
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between lg:mb-1">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Profit</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Reputation (MON)</span>
                 <span
                   className={`font-data text-xl lg:text-2xl font-bold ${
                     totalProfit >= 0
@@ -226,7 +227,7 @@ export default function HistoryPage() {
           <div className="hidden lg:block space-y-3">
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Win Rate</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Accuracy Rate</span>
                 <span className="font-data text-lg font-bold text-[var(--color-ink)]">
                   {winRate}%
                 </span>
@@ -248,9 +249,9 @@ export default function HistoryPage() {
             </div>
             <div className="bg-[var(--color-surface)] rounded-[var(--radius-chip)] p-4 shadow-[var(--shadow-stack)]">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-[var(--color-chrome)] font-medium">Total Prediksi</span>
+                <span className="text-xs text-[var(--color-chrome)] font-medium">Total Analysis</span>
                 <span className="font-data text-lg font-bold text-[var(--color-ink)]">
-                  {MOCK_PREDICTIONS.length}
+                  {predictions.length}
                 </span>
               </div>
             </div>
@@ -280,7 +281,15 @@ export default function HistoryPage() {
           {/* Predictions Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             <AnimatePresence mode="popLayout">
-              {filteredPredictions.length > 0 ? (
+              {isLoading ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-full text-center py-12"
+                >
+                  <p className="text-sm text-[var(--color-chrome)]">Loading your history...</p>
+                </motion.div>
+              ) : filteredPredictions.length > 0 ? (
                 filteredPredictions.map((prediction) => (
                   <PredictionCard key={prediction.id} prediction={prediction} />
                 ))
@@ -298,7 +307,7 @@ export default function HistoryPage() {
                     </svg>
                   </div>
                   <p className="text-sm text-[var(--color-chrome)]">
-                    Belum ada prediksi dengan filter ini.
+                    No analysis found with this filter.
                   </p>
                 </motion.div>
               )}

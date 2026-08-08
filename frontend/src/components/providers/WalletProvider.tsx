@@ -88,6 +88,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID ?? "";
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -109,8 +110,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         appearance: {
           theme: "light",
           accentColor: "#0E9F6E",
-          landingHeader: "Login ke SwipePredict",
-          loginMessage: "Pakai email Privy atau MetaMask.",
+          landingHeader: "Login to SwipePredict",
+          loginMessage: "Use Privy email or MetaMask.",
           walletList: ["metamask", "detected_ethereum_wallets"],
           walletChainType: "ethereum-only",
         },

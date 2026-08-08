@@ -16,6 +16,8 @@ contract PredictionMarket {
     uint256 public nextMarketId;
 
     struct Market {
+        string question;
+        string category;
         uint64 deadline;
         bool resolved;
         bool outcome;
@@ -37,7 +39,7 @@ contract PredictionMarket {
     error Unauthorized();
     error InvalidAddress();
 
-    event MarketCreated(uint256 indexed marketId, uint64 deadline);
+    event MarketCreated(uint256 indexed marketId, string question, string category, uint64 deadline);
     event Staked(uint256 indexed marketId, address indexed user, bool side, uint256 amount);
     event MarketResolved(uint256 indexed marketId, bool outcome);
     event Claimed(uint256 indexed marketId, address indexed user, uint256 payout);
@@ -55,15 +57,17 @@ contract PredictionMarket {
         usdc = IERC20(_usdc);
     }
 
-    function createMarket(uint64 deadline) external returns (uint256 marketId) {
+    function createMarket(string calldata question, string calldata category, uint64 deadline) external returns (uint256 marketId) {
         if (deadline <= block.timestamp) revert MarketClosed();
 
         marketId = nextMarketId;
         nextMarketId = marketId + 1;
 
+        markets[marketId].question = question;
+        markets[marketId].category = category;
         markets[marketId].deadline = deadline;
 
-        emit MarketCreated(marketId, deadline);
+        emit MarketCreated(marketId, question, category, deadline);
     }
 
     function stakeFor(address user, uint256 marketId, bool side, uint256 amount) external {

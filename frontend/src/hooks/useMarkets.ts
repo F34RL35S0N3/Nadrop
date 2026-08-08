@@ -7,7 +7,6 @@ import {
   readMarket,
   readNextMarketId,
 } from "@/lib/contract";
-import { getResolvedMarketMeta } from "@/lib/markets";
 
 const marketLimit = 12;
 const rpcDelayMs = 140;
@@ -22,12 +21,10 @@ function toUiMarket(id: number, market: Awaited<ReturnType<typeof readMarket>>):
   const totalStake = totalYes + totalNo;
   const yesPercentage =
     totalStake === 0 ? 50 : Math.round((totalYes / totalStake) * 100);
-  const meta = getResolvedMarketMeta(id);
-
   return {
     id: String(id),
-    category: meta.category,
-    question: meta.question,
+    category: market.category,
+    question: market.question,
     deadline: Number(market.deadline) * 1000,
     yesPercentage,
     noPercentage: 100 - yesPercentage,
@@ -35,7 +32,7 @@ function toUiMarket(id: number, market: Awaited<ReturnType<typeof readMarket>>):
     participants: Math.round(totalStake),
     contractAddress: PREDICTION_MARKET_ADDRESS,
     resolveDescription: market.resolved
-      ? `Market sudah di-resolve dengan hasil ${market.outcome ? "YA" : "TIDAK"}.`
+      ? `Market resolved with ${market.outcome ? "YES" : "NO"} outcome.`
       : "Admin akan memverifikasi jawaban setelah deadline.",
     status: market.resolved
       ? "resolved"

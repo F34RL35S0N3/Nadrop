@@ -5,7 +5,9 @@ import { SettlementToast } from "@/components/settlement/SettlementToast";
 import { useWallet } from "@/components/providers/WalletProvider";
 import { useMarkets } from "@/hooks/useMarkets";
 import { useSwipePredict } from "@/hooks/useSwipePredict";
-import { MOCK_LEADERBOARD, MOCK_PREDICTIONS, truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
+import { truncateAddress } from "@/lib/mockData";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
+import { useHistory } from "@/hooks/useHistory";
 
 export default function MarketPage() {
   const { connect, isConnected, ready } = useWallet();
@@ -26,7 +28,10 @@ export default function MarketPage() {
     dismissOverlay,
   } = useSwipePredict();
 
-  const allPredictions = [...predictions, ...MOCK_PREDICTIONS];
+  const { leaderboard, isLoading: leaderboardLoading } = useLeaderboard();
+  const { predictions: historyPredictions } = useHistory();
+
+  const allPredictions = [...predictions, ...historyPredictions];
 
   if (!isConnected) {
     return (
@@ -36,10 +41,10 @@ export default function MarketPage() {
             Login required
           </p>
           <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-3">
-            Login dulu untuk mulai swipe.
+            Log in first to start swiping.
           </h1>
           <p className="text-sm text-[var(--color-chrome)] mb-6">
-            Pilih Privy email atau MetaMask di modal login.
+            Choose Privy email or MetaMask in the login modal.
           </p>
           <button
             type="button"
@@ -63,23 +68,23 @@ export default function MarketPage() {
           {/* Market Stats */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Statistik Market
+              Market Sentiment
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-ink)]">Market Aktif</span>
+                <span className="text-sm text-[var(--color-ink)]">Active Markets</span>
                 <span className="font-data text-sm font-medium text-[var(--color-yes)]">
                   {remainingCount}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-ink)]">Total Prediksi</span>
+                <span className="text-sm text-[var(--color-ink)]">Total Opinions</span>
                 <span className="font-data text-sm font-medium text-[var(--color-ink)]">
                   {allPredictions.length}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-ink)]">Win Rate</span>
+                <span className="text-sm text-[var(--color-ink)]">Accuracy Rate</span>
                 <span className="font-data text-sm font-medium text-[var(--color-yes)]">
                   {allPredictions.length > 0
                     ? Math.round(
@@ -97,12 +102,14 @@ export default function MarketPage() {
           {/* Mini Leaderboard */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Top Predictors
+              Top Analysts
             </h3>
-            <div className="space-y-2.5">
-              {MOCK_LEADERBOARD.slice(0, 5).map((entry) => (
+            <div className="space-y-3">
+              {leaderboardLoading ? (
+                <div className="text-center text-xs text-[var(--color-chrome)] py-2">Loading...</div>
+              ) : leaderboard.slice(0, 5).map((entry) => (
                 <div
-                  key={entry.rank}
+                  key={entry.address}
                   className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-badge)] ${
                     entry.isCurrentUser
                       ? "bg-[var(--color-yes-light)]"
@@ -142,7 +149,7 @@ export default function MarketPage() {
           {hasMore && (
             <div className="mb-4 text-center">
               <span className="text-xs text-[var(--color-chrome)]">
-                <span className="font-data">{remainingCount}</span> market tersedia
+                <span className="font-data">{remainingCount}</span> markets available
               </span>
             </div>
           )}
@@ -172,7 +179,7 @@ export default function MarketPage() {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M10 4L6 8L10 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                TIDAK
+                NO
               </button>
               <button
                 onClick={() => {
@@ -196,7 +203,7 @@ export default function MarketPage() {
                 className="flex items-center gap-2 px-6 py-3 rounded-[var(--radius-button)] border border-[var(--color-yes-mid)] text-[var(--color-yes)] text-sm font-medium hover:bg-[var(--color-yes-light)] transition-colors duration-200"
                 id="desktop-btn-yes"
               >
-                YA
+                YES
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -210,7 +217,7 @@ export default function MarketPage() {
           {/* Recent Predictions */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Prediksi Terbaru
+              Recent Analysis
             </h3>
             {allPredictions.length > 0 ? (
               <div className="space-y-2.5">
@@ -241,7 +248,7 @@ export default function MarketPage() {
                       <div className="flex items-center gap-2 mt-1">
                         <span
                           className={`text-[10px] font-bold ${
-                            pred.choice === "YA"
+                            pred.choice === "YES"
                               ? "text-[var(--color-yes)]"
                               : "text-[var(--color-no)]"
                           }`}
@@ -260,7 +267,7 @@ export default function MarketPage() {
               </div>
             ) : (
               <p className="text-xs text-[var(--color-chrome)] py-4 text-center">
-                Swipe market untuk mulai prediksi.
+                Swipe a market to share your opinion.
               </p>
             )}
           </div>
@@ -268,14 +275,14 @@ export default function MarketPage() {
           {/* How it works */}
           <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-4">
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
-              Cara Kerja
+              How it works
             </h3>
             <div className="space-y-3">
               {[
-                { step: "1", label: "Swipe kanan YA, kiri TIDAK, atas SKIP" },
-                { step: "2", label: "Stake otomatis 1 mUSDC per prediksi" },
-                { step: "3", label: "Settlement instan via x402 protocol" },
-                { step: "4", label: "Menang? Klaim profit langsung" },
+                { step: "1", label: "Swipe right for YES, left for NO, up to SKIP" },
+                { step: "2", label: "Automatic 1 mUSDC contribution per opinion" },
+                { step: "3", label: "Instant settlement via x402 protocol" },
+                { step: "4", label: "Accurate analysis? Earn reputation rewards" },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-2.5">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--color-yes-light)] text-[var(--color-yes)] flex items-center justify-center text-[10px] font-bold">
@@ -295,7 +302,7 @@ export default function MarketPage() {
       {showOverlay && activeSwipe && (
         <SettlementToast
           state={settlementState}
-          choice={activeSwipe.direction === "right" ? "YA" : "TIDAK"}
+          choice={activeSwipe.direction === "right" ? "YES" : "NO"}
           question={activeSwipe.market.question}
           onDismiss={dismissOverlay}
         />

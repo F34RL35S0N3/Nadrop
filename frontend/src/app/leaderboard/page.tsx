@@ -1,20 +1,22 @@
 "use client";
 
-import { MOCK_LEADERBOARD, truncateAddress } from "@/lib/mockData";
+import { truncateAddress } from "@/lib/mockData";
 import { LeaderboardRow } from "@/components/leaderboard/LeaderboardRow";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
 
 export default function LeaderboardPage() {
-  const currentUser = MOCK_LEADERBOARD.find((e) => e.isCurrentUser);
+  const { leaderboard, isLoading } = useLeaderboard();
+  const currentUser = leaderboard.find((e) => e.isCurrentUser);
 
   return (
     <div className="flex-1 flex flex-col px-4 md:px-6 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
       {/* Page Header */}
       <div className="mb-6">
         <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-1">
-          Peringkat
+          Top Analysts
         </h1>
         <p className="text-sm text-[var(--color-chrome)]">
-          Predictor terbaik di SwipePredict
+          Best analysts in the ecosystem
         </p>
       </div>
 
@@ -33,11 +35,11 @@ export default function LeaderboardPage() {
                   2
                 </div>
                 <div className="font-data text-[11px] text-[var(--color-chrome)] text-center truncate max-w-[80px]">
-                  {MOCK_LEADERBOARD[1]?.displayName ||
-                    truncateAddress(MOCK_LEADERBOARD[1]?.address || "")}
+                  {leaderboard[1]?.displayName ||
+                    truncateAddress(leaderboard[1]?.address || "")}
                 </div>
                 <div className="font-data text-sm font-bold text-[var(--color-yes)] mt-0.5">
-                  +{MOCK_LEADERBOARD[1]?.totalProfit.toFixed(1)}
+                  +{leaderboard[1]?.totalProfit.toFixed(1) || 0}
                 </div>
                 <div className="w-16 h-16 rounded-t-lg bg-[var(--color-chrome)] opacity-15 mt-2" />
               </div>
@@ -55,11 +57,11 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
                 <div className="font-data text-[11px] text-[var(--color-ink)] font-medium text-center truncate max-w-[80px]">
-                  {MOCK_LEADERBOARD[0]?.displayName ||
-                    truncateAddress(MOCK_LEADERBOARD[0]?.address || "")}
+                  {leaderboard[0]?.displayName ||
+                    truncateAddress(leaderboard[0]?.address || "")}
                 </div>
                 <div className="font-data text-sm font-bold text-[var(--color-yes)] mt-0.5">
-                  +{MOCK_LEADERBOARD[0]?.totalProfit.toFixed(1)}
+                  +{leaderboard[0]?.totalProfit.toFixed(1) || 0}
                 </div>
                 <div className="w-16 h-24 rounded-t-lg bg-[#F5A623] opacity-15 mt-2" />
               </div>
@@ -70,11 +72,11 @@ export default function LeaderboardPage() {
                   3
                 </div>
                 <div className="font-data text-[11px] text-[var(--color-chrome)] text-center truncate max-w-[80px]">
-                  {MOCK_LEADERBOARD[2]?.displayName ||
-                    truncateAddress(MOCK_LEADERBOARD[2]?.address || "")}
+                  {leaderboard[2]?.displayName ||
+                    truncateAddress(leaderboard[2]?.address || "")}
                 </div>
                 <div className="font-data text-sm font-bold text-[var(--color-yes)] mt-0.5">
-                  +{MOCK_LEADERBOARD[2]?.totalProfit.toFixed(1)}
+                  +{leaderboard[2]?.totalProfit.toFixed(1) || 0}
                 </div>
                 <div className="w-16 h-12 rounded-t-lg bg-[#CD7F32] opacity-15 mt-2" />
               </div>
@@ -85,23 +87,23 @@ export default function LeaderboardPage() {
           {currentUser && (
             <div className="hidden lg:block bg-[var(--color-yes-light)] border border-[var(--color-yes-mid)] rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-stack)]">
               <h3 className="text-xs font-medium text-[var(--color-yes)] uppercase tracking-wider mb-3">
-                Posisi Kamu
+                Your Position
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Peringkat</span>
+                  <span className="text-sm text-[var(--color-ink)]">Rank</span>
                   <span className="font-data text-xl font-bold text-[var(--color-ink)]">
                     #{currentUser.rank}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Win Rate</span>
+                  <span className="text-sm text-[var(--color-ink)]">Accuracy Rate</span>
                   <span className="font-data text-lg font-bold text-[var(--color-yes)]">
                     {currentUser.winRate}%
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Rekam Jejak</span>
+                  <span className="text-sm text-[var(--color-ink)]">Track Record</span>
                   <span className="font-data text-sm text-[var(--color-ink)]">
                     <span className="text-[var(--color-yes)]">{currentUser.wins}W</span>
                     {" / "}
@@ -109,7 +111,7 @@ export default function LeaderboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Total Profit</span>
+                  <span className="text-sm text-[var(--color-ink)]">Reputation (MON)</span>
                   <span className="font-data text-lg font-bold text-[var(--color-yes)]">
                     +{currentUser.totalProfit.toFixed(1)} MON
                   </span>
@@ -122,9 +124,15 @@ export default function LeaderboardPage() {
         {/* ── Right: Full Ranking List ── */}
         <div className="flex-1 min-w-0">
           <div className="space-y-2">
-            {MOCK_LEADERBOARD.map((entry) => (
-              <LeaderboardRow key={entry.rank} entry={entry} />
-            ))}
+            {isLoading ? (
+              <div className="text-center text-sm text-[var(--color-chrome)] py-8">Loading leaderboard...</div>
+            ) : leaderboard.length === 0 ? (
+              <div className="text-center text-sm text-[var(--color-chrome)] py-8">No ranked analysts yet.</div>
+            ) : (
+              leaderboard.map((entry) => (
+                <LeaderboardRow key={entry.address} entry={entry} />
+              ))
+            )}
           </div>
         </div>
       </div>

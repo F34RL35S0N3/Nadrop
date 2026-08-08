@@ -8,7 +8,7 @@ import {
 } from "viem";
 
 export const PREDICTION_MARKET_ADDRESS =
-  "0x9FC2595F6493b939Db9E9116273129d650A55f86" as const;
+  "0xc7b33889F8120bD719d48310Dd396855388fbd72" as const;
 export const MOCK_USDC_ADDRESS =
   "0xF380657785bb52732DDA31A3cf14c248645594E5" as const;
 
@@ -79,15 +79,34 @@ async function withRpcRetry<T>(operation: () => Promise<T>): Promise<T> {
 
 export const PREDICTION_MARKET_ABI = [
   {
-    name: "markets",
+    name: "createMarket",
     type: "function",
-    inputs: [{ name: "", type: "uint256" }],
+    inputs: [
+      { name: "question", type: "string" },
+      { name: "category", type: "string" },
+      { name: "deadline", type: "uint64" }
+    ],
+    outputs: [{ name: "marketId", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    name: "getMarket",
+    type: "function",
+    inputs: [{ name: "marketId", type: "uint256" }],
     outputs: [
-      { name: "deadline", type: "uint64" },
-      { name: "resolved", type: "bool" },
-      { name: "outcome", type: "bool" },
-      { name: "totalYes", type: "uint128" },
-      { name: "totalNo", type: "uint128" },
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "question", type: "string" },
+          { name: "category", type: "string" },
+          { name: "deadline", type: "uint64" },
+          { name: "resolved", type: "bool" },
+          { name: "outcome", type: "bool" },
+          { name: "totalYes", type: "uint128" },
+          { name: "totalNo", type: "uint128" },
+        ],
+      },
     ],
     stateMutability: "view",
   },
@@ -135,6 +154,16 @@ export const PREDICTION_MARKET_ABI = [
       { name: "payout", type: "uint256", indexed: false },
     ],
   },
+  {
+    name: "Staked",
+    type: "event",
+    inputs: [
+      { name: "marketId", type: "uint256", indexed: true },
+      { name: "user", type: "address", indexed: true },
+      { name: "side", type: "bool", indexed: false },
+      { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
 ] as const;
 
 export const MOCK_USDC_ABI = [
@@ -155,6 +184,8 @@ export const MOCK_USDC_ABI = [
 ] as const;
 
 export type Market = {
+  question: string;
+  category: string;
   deadline: bigint;
   resolved: boolean;
   outcome: boolean;
@@ -163,15 +194,17 @@ export type Market = {
 };
 
 export async function readMarket(id: number): Promise<Market> {
-  const [deadline, resolved, outcome, totalYes, totalNo] =
+  const [question, category, deadline, resolved, outcome, totalYes, totalNo] =
     await withRpcRetry(() => publicClient.readContract({
       address: PREDICTION_MARKET_ADDRESS,
       abi: PREDICTION_MARKET_ABI,
-      functionName: "markets",
+      functionName: "getMarket",
       args: [BigInt(id)],
     }));
 
   return {
+    question,
+    category,
     deadline,
     resolved,
     outcome,

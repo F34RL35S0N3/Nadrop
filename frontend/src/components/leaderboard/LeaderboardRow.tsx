@@ -1,6 +1,6 @@
 "use client";
 
-import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
+import { truncateAddress } from "@/lib/mockData";
 import { LeaderboardEntry } from "@/lib/types";
 
 interface LeaderboardRowProps {
@@ -48,7 +48,7 @@ export function LeaderboardRow({ entry }: LeaderboardRowProps) {
           </span>
           {entry.isCurrentUser && (
             <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold text-[var(--color-yes)] bg-[var(--color-yes-mid)]">
-              KAMU
+              YOU
             </span>
           )}
         </div>

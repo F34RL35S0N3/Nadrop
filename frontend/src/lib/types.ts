@@ -16,7 +16,7 @@ export interface Prediction {
   id: string;
   marketId: string;
   question: string;
-  choice: "YA" | "TIDAK";
+  choice: "YES" | "NO";
   stake: number;
   status: "pending" | "won" | "lost";
   payout: number | null;

@@ -16,13 +16,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SwipePredict — Prediction Market Secepat Swipe",
+  title: "SwipePredict — Fast Prediction Market",
   description:
-    "Prediksi hasil ya/tidak dari event singkat, stake token, dan dapatkan settlement instan on-chain lewat Monad testnet dan x402 protocol.",
+    "Predict yes/no outcomes of short events, stake tokens, and get instant on-chain settlement via Monad testnet and x402 protocol.",
   keywords: ["prediction market", "monad", "x402", "web3", "swipe"],
   openGraph: {
     title: "SwipePredict",
-    description: "Prediction market secepat swipe, settlement instan on-chain.",
+    description: "Fast prediction market, instant on-chain settlement.",
     type: "website",
   },
 };
@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="id"
+      lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-[var(--color-base)] text-[var(--color-ink)] antialiased">

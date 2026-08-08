@@ -30,7 +30,7 @@ export function OddsBar({ yesPercentage, noPercentage }: OddsBarProps) {
       <div className="flex items-center justify-between mt-2.5">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[var(--color-yes)]" />
-          <span className="text-sm font-medium text-[var(--color-yes)]">YA</span>
+          <span className="text-sm font-medium text-[var(--color-yes)]">YES</span>
           <span className="font-data text-sm text-[var(--color-yes)]">
             {yesPercentage}%
           </span>
@@ -39,7 +39,7 @@ export function OddsBar({ yesPercentage, noPercentage }: OddsBarProps) {
           <span className="font-data text-sm text-[var(--color-no)]">
             {noPercentage}%
           </span>
-          <span className="text-sm font-medium text-[var(--color-no)]">TIDAK</span>
+          <span className="text-sm font-medium text-[var(--color-no)]">NO</span>
           <span className="w-2 h-2 rounded-full bg-[var(--color-no)]" />
         </div>
       </div>

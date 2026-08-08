@@ -1,7 +1,7 @@
 "use client";
 
 import { Market } from "@/lib/types";
-import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
+import { MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
 
 interface TransparencyPanelProps {
   market: Market;
@@ -29,10 +29,20 @@ export function TransparencyPanel({ market }: TransparencyPanelProps) {
       {/* Resolve Mechanism */}
       <div className="mb-3">
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-chrome)] font-medium block mb-1">
-          Mekanisme Resolve
+          Resolution Mechanism
         </span>
         <p className="text-xs text-[var(--color-ink)] leading-relaxed">
           {market.resolveDescription}
+        </p>
+      </div>
+
+      {/* Public Goods Fund */}
+      <div className="mb-3">
+        <span className="text-[10px] uppercase tracking-wider text-[var(--color-chrome)] font-medium block mb-1">
+          Public Goods Fund
+        </span>
+        <p className="text-xs text-[var(--color-ink)] leading-relaxed">
+          5% (500 BPS) of total contributions is allocated as donations to open-source developers in the Monad ecosystem.
         </p>
       </div>
 
@@ -67,7 +77,7 @@ export function TransparencyPanel({ market }: TransparencyPanelProps) {
           <path d="M4 2H2V10H10V8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M6 6L11 1M11 1H8M11 1V4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        Lihat di Monadscan
+        View on Monadscan
       </a>
     </div>
   );
