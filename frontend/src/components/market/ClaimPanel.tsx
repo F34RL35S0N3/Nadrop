@@ -25,6 +25,7 @@ import {
 import { Market } from "@/lib/types";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
+const explorerAddressUrl = "https://testnet.monadvision.com/address/";
 
 type ClaimState = {
   yesStake: bigint;
@@ -38,6 +39,8 @@ type ClaimState = {
 type Status = {
   text: string;
   txHash?: string;
+  detailUrl?: string;
+  notice?: string;
   error?: string;
 };
 
@@ -113,6 +116,9 @@ export function ClaimPanel({ market }: { market: Market | null }) {
     if (claimed) {
       setStatus({
         text: "diklaim",
+        detailUrl: `${explorerAddressUrl}${userAddress}`,
+        notice:
+          "Claim sudah tercatat on-chain. Tx hash sedang dicari dari RPC logs.",
       });
 
       readLatestClaimTxHash(marketId, userAddress)
@@ -120,13 +126,18 @@ export function ClaimPanel({ market }: { market: Market | null }) {
           setStatus({
             text: "diklaim",
             txHash: txHash ?? undefined,
-            error: txHash ? undefined : "Tx claim sudah terjadi, hash belum ditemukan dari RPC logs.",
+            detailUrl: txHash ? undefined : `${explorerAddressUrl}${userAddress}`,
+            notice: txHash
+              ? undefined
+              : "Claim sudah tercatat on-chain. Tx hash belum ditemukan dari RPC logs, buka riwayat address di explorer.",
           });
         })
-        .catch((error) => {
+        .catch(() => {
           setStatus({
             text: "diklaim",
-            error: `Tx claim sudah terjadi, detail log gagal dibaca: ${extractError(error)}`,
+            detailUrl: `${explorerAddressUrl}${userAddress}`,
+            notice:
+              "Claim sudah tercatat on-chain. RPC publik gagal membaca detail log, buka riwayat address di explorer.",
           });
         });
     } else {
@@ -267,6 +278,21 @@ export function ClaimPanel({ market }: { market: Market | null }) {
         >
           {status.txHash}
         </a>
+      ) : null}
+      {!status.txHash && status.detailUrl ? (
+        <a
+          href={status.detailUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1 block break-all font-data text-xs text-[var(--color-yes)] underline"
+        >
+          Buka riwayat address di explorer
+        </a>
+      ) : null}
+      {status.notice ? (
+        <p className="mt-2 font-data text-xs text-[var(--color-chrome)]">
+          {status.notice}
+        </p>
       ) : null}
       {status.error ? (
         <pre className="mt-2 whitespace-pre-wrap break-words font-data text-xs text-[var(--color-no)]">

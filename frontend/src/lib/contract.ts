@@ -223,6 +223,10 @@ export async function readUsdcBalance(user: Address) {
 }
 
 export async function readLatestClaimTxHash(id: number, user: Address) {
+  const latestBlock = await withRpcRetry(() => publicClient.getBlockNumber());
+  const fromBlock =
+    latestBlock > BigInt(500_000) ? latestBlock - BigInt(500_000) : BigInt(0);
+
   const logs = await withRpcRetry(() =>
     publicClient.getLogs({
       address: PREDICTION_MARKET_ADDRESS,
@@ -239,7 +243,7 @@ export async function readLatestClaimTxHash(id: number, user: Address) {
         marketId: BigInt(id),
         user,
       },
-      fromBlock: BigInt(0),
+      fromBlock,
       toBlock: "latest",
     }),
   );
