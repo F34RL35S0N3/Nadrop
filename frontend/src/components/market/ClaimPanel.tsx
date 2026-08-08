@@ -17,11 +17,11 @@ import {
   PREDICTION_MARKET_ADDRESS,
   publicClient,
   readClaimed,
-  readLatestClaimTxHash,
   readMarket,
   readStake,
   readUsdcBalance,
 } from "@/lib/contract";
+import { getSavedClaimTxHash, saveClaimTxHash } from "@/lib/claimTxStore";
 import { Market } from "@/lib/types";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
@@ -114,32 +114,16 @@ export function ClaimPanel({ market }: { market: Market | null }) {
     setHasLoaded(true);
 
     if (claimed) {
+      const savedTxHash = getSavedClaimTxHash(marketId, userAddress);
+
       setStatus({
         text: "diklaim",
-        detailUrl: `${explorerAddressUrl}${userAddress}`,
-        notice:
-          "Claim sudah tercatat on-chain. Tx hash sedang dicari dari RPC logs.",
+        txHash: savedTxHash ?? undefined,
+        detailUrl: savedTxHash ? undefined : `${explorerAddressUrl}${userAddress}`,
+        notice: savedTxHash
+          ? undefined
+          : "Claim sudah tercatat on-chain. Tx hash lama belum ada di cache lokal.",
       });
-
-      readLatestClaimTxHash(marketId, userAddress)
-        .then((txHash) => {
-          setStatus({
-            text: "diklaim",
-            txHash: txHash ?? undefined,
-            detailUrl: txHash ? undefined : `${explorerAddressUrl}${userAddress}`,
-            notice: txHash
-              ? undefined
-              : "Claim sudah tercatat on-chain. Tx hash belum ditemukan dari RPC logs, buka riwayat address di explorer.",
-          });
-        })
-        .catch(() => {
-          setStatus({
-            text: "diklaim",
-            detailUrl: `${explorerAddressUrl}${userAddress}`,
-            notice:
-              "Claim sudah tercatat on-chain. RPC publik gagal membaca detail log, buka riwayat address di explorer.",
-          });
-        });
     } else {
       setStatus((current) =>
         current.text === "diklaim" ? { text: "idle" } : current,
@@ -197,6 +181,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       });
 
       await publicClient.waitForTransactionReceipt({ hash: txHash });
+      saveClaimTxHash(marketId, userAddress as Address, txHash);
       setStatus({ text: "diklaim", txHash });
       await refresh();
     } catch (error) {
