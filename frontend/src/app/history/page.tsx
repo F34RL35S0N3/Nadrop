@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ClaimPanel } from "@/components/market/ClaimPanel";
+import { useMarkets } from "@/hooks/useMarkets";
 import { MOCK_PREDICTIONS } from "@/lib/mockData";
 import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
 import { Prediction } from "@/lib/types";
@@ -111,6 +113,7 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
 
 export default function HistoryPage() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>("semua");
+  const { markets: closedMarkets } = useMarkets({ status: "closed" });
 
   const filteredPredictions = MOCK_PREDICTIONS.filter((p) => {
     if (activeFilter === "semua") return true;
@@ -144,6 +147,42 @@ export default function HistoryPage() {
           Semua prediksi kamu dan hasilnya
         </p>
       </div>
+
+      <section className="mb-6">
+        <div className="mb-3">
+          <h2 className="font-display text-xl font-bold text-[var(--color-ink)]">
+            Klaim Reward
+          </h2>
+          <p className="text-sm text-[var(--color-chrome)]">
+            Market yang sudah berakhir atau resolved muncul di sini.
+          </p>
+        </div>
+
+        {closedMarkets.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {closedMarkets.map((market) => (
+              <div key={market.id}>
+                <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]">
+                  <div className="mb-2 flex items-center justify-between font-data text-xs text-[var(--color-chrome)]">
+                    <span>
+                      [{market.category}] market #{market.id}
+                    </span>
+                    <span>{market.status}</span>
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-[var(--color-ink)]">
+                    {market.question}
+                  </h3>
+                </div>
+                <ClaimPanel market={market} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center text-sm text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
+            Belum ada market selesai untuk diklaim.
+          </div>
+        )}
+      </section>
 
       <div className="flex flex-col lg:flex-row lg:gap-8 w-full">
         {/* ── Left: Stats Panel (Desktop sidebar / Mobile top) ── */}

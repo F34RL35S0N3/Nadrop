@@ -45,9 +45,14 @@ function toUiMarket(id: number, market: Awaited<ReturnType<typeof readMarket>>):
   };
 }
 
-export function useMarkets() {
+type UseMarketsOptions = {
+  status?: "active" | "closed" | "all";
+};
+
+export function useMarkets(options: UseMarketsOptions = {}) {
   const [markets, setMarkets] = useState<Market[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const statusFilter = options.status ?? "active";
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +68,16 @@ export function useMarkets() {
 
       for (const id of ids) {
         const market = await readMarket(id);
-        nextMarkets.push(toUiMarket(id, market));
+        const uiMarket = toUiMarket(id, market);
+
+        if (
+          statusFilter === "all" ||
+          (statusFilter === "active" && uiMarket.status === "active") ||
+          (statusFilter === "closed" && uiMarket.status !== "active")
+        ) {
+          nextMarkets.push(uiMarket);
+        }
+
         await sleep(rpcDelayMs);
       }
 
@@ -82,7 +96,7 @@ export function useMarkets() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [statusFilter]);
 
   const currentMarket = markets[currentIndex] || null;
   const nextMarket = markets[currentIndex + 1] || null;
