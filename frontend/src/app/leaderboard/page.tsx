@@ -32,7 +32,12 @@ export default function LeaderboardPage() {
 
   const loadLeaderboard = useCallback(async () => {
     try {
-      const response = await fetch("/api/leaderboard", { cache: "no-store" });
+      const params = address
+        ? `?${new URLSearchParams({ userAddress: address }).toString()}`
+        : "";
+      const response = await fetch(`/api/leaderboard${params}`, {
+        cache: "no-store",
+      });
       const data = (await response.json()) as LeaderboardResponse;
 
       if (!response.ok) {

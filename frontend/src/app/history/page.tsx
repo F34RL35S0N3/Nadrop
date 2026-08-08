@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClaimPanel } from "@/components/market/ClaimPanel";
+import { useWallet } from "@/components/providers/WalletProvider";
 import { useMarkets } from "@/hooks/useMarkets";
-import { MOCK_PREDICTIONS } from "@/lib/mockData";
 import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
 import { Prediction } from "@/lib/types";
 
@@ -16,6 +16,31 @@ const FILTERS: { label: string; value: FilterTab }[] = [
   { label: "Kalah", value: "kalah" },
   { label: "Pending", value: "pending" },
 ];
+
+type HistoryStats = {
+  wins: number;
+  losses: number;
+  pending: number;
+  profit: number;
+  winRate: number;
+  total: number;
+};
+
+type HistoryResponse = {
+  predictions?: Prediction[];
+  stats?: HistoryStats;
+  error?: string;
+  details?: string;
+};
+
+const emptyStats: HistoryStats = {
+  wins: 0,
+  losses: 0,
+  pending: 0,
+  profit: 0,
+  winRate: 0,
+  total: 0,
+};
 
 function PredictionCard({ prediction }: { prediction: Prediction }) {
   const statusConfig = {
@@ -81,28 +106,34 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
             </span>
             {prediction.status === "won" && prediction.payout && (
               <span className="font-data text-xs text-[var(--color-yes)]">
-                +{prediction.payout.toFixed(1)} MON
+                payout {prediction.payout.toFixed(1)} mUSDC
               </span>
             )}
           </div>
 
           {/* Tx Hash + Settlement Time */}
           <div className="flex items-center gap-3 flex-wrap">
-            <a
-              href={`${MONAD_TESTNET_EXPLORER}/tx/${prediction.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-data text-[11px] text-[var(--color-chrome)] hover:text-[var(--color-yes)] transition-colors"
-            >
-              tx: {truncateAddress(prediction.txHash)}
-            </a>
+            {prediction.txHash ? (
+              <a
+                href={`${MONAD_TESTNET_EXPLORER}/tx/${prediction.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-data text-[11px] text-[var(--color-chrome)] hover:text-[var(--color-yes)] transition-colors"
+              >
+                tx: {truncateAddress(prediction.txHash)}
+              </a>
+            ) : (
+              <span className="font-data text-[11px] text-[var(--color-chrome)]">
+                tx: backfilled on-chain
+              </span>
+            )}
             {prediction.settlementTime && (
               <span className="font-data text-[11px] text-[var(--color-chrome)]">
                 settled {prediction.settlementTime}s
               </span>
             )}
             <span className="font-data text-[11px] text-[var(--color-chrome)]">
-              stake: {prediction.stake} MON
+              stake: {prediction.stake} mUSDC
             </span>
           </div>
         </div>
@@ -112,29 +143,58 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
 }
 
 export default function HistoryPage() {
+  const { address, isConnected } = useWallet();
   const [activeFilter, setActiveFilter] = useState<FilterTab>("semua");
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [stats, setStats] = useState<HistoryStats>(emptyStats);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { markets: closedMarkets } = useMarkets({ status: "closed" });
 
-  const filteredPredictions = MOCK_PREDICTIONS.filter((p) => {
+  const loadHistory = useCallback(async () => {
+    if (!address) {
+      setPredictions([]);
+      setStats(emptyStats);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const params = new URLSearchParams({ userAddress: address });
+      const response = await fetch(`/api/history?${params.toString()}`, {
+        cache: "no-store",
+      });
+      const data = (await response.json()) as HistoryResponse;
+
+      if (!response.ok) {
+        throw new Error(data.details ?? data.error ?? "History gagal dibaca");
+      }
+
+      setPredictions(data.predictions ?? []);
+      setStats(data.stats ?? emptyStats);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    loadHistory();
+    const interval = window.setInterval(loadHistory, 15000);
+
+    return () => window.clearInterval(interval);
+  }, [loadHistory]);
+
+  const filteredPredictions = predictions.filter((p) => {
     if (activeFilter === "semua") return true;
     if (activeFilter === "menang") return p.status === "won";
     if (activeFilter === "kalah") return p.status === "lost";
     if (activeFilter === "pending") return p.status === "pending";
     return true;
   });
-
-  // Summary stats
-  const totalWins = MOCK_PREDICTIONS.filter((p) => p.status === "won").length;
-  const totalLosses = MOCK_PREDICTIONS.filter((p) => p.status === "lost").length;
-  const totalPending = MOCK_PREDICTIONS.filter((p) => p.status === "pending").length;
-  const totalProfit = MOCK_PREDICTIONS.reduce(
-    (sum, p) => sum + (p.payout || 0) - p.stake,
-    0
-  );
-  const winRate =
-    totalWins + totalLosses > 0
-      ? Math.round((totalWins / (totalWins + totalLosses)) * 100)
-      : 0;
 
   return (
     <div className="flex-1 flex flex-col px-4 md:px-6 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
@@ -146,6 +206,11 @@ export default function HistoryPage() {
         <p className="text-sm text-[var(--color-chrome)]">
           Semua prediksi kamu dan hasilnya
         </p>
+        {!isConnected ? (
+          <p className="mt-2 text-sm text-[var(--color-no)]">
+            Login dulu untuk melihat riwayat real wallet kamu.
+          </p>
+        ) : null}
       </div>
 
       <section className="mb-6">
@@ -193,7 +258,7 @@ export default function HistoryPage() {
               <div className="flex items-center justify-between lg:mb-1">
                 <span className="text-xs text-[var(--color-chrome)] font-medium">Menang</span>
                 <span className="font-data text-xl lg:text-2xl font-bold text-[var(--color-yes)]">
-                  {totalWins}
+                  {stats.wins}
                 </span>
               </div>
             </div>
@@ -201,7 +266,7 @@ export default function HistoryPage() {
               <div className="flex items-center justify-between lg:mb-1">
                 <span className="text-xs text-[var(--color-chrome)] font-medium">Kalah</span>
                 <span className="font-data text-xl lg:text-2xl font-bold text-[var(--color-no)]">
-                  {totalLosses}
+                  {stats.losses}
                 </span>
               </div>
             </div>
@@ -210,13 +275,13 @@ export default function HistoryPage() {
                 <span className="text-xs text-[var(--color-chrome)] font-medium">Profit</span>
                 <span
                   className={`font-data text-xl lg:text-2xl font-bold ${
-                    totalProfit >= 0
+                    stats.profit >= 0
                       ? "text-[var(--color-yes)]"
                       : "text-[var(--color-no)]"
                   }`}
                 >
-                  {totalProfit >= 0 ? "+" : ""}
-                  {totalProfit.toFixed(1)}
+                  {stats.profit >= 0 ? "+" : ""}
+                  {stats.profit.toFixed(1)}
                 </span>
               </div>
             </div>
@@ -228,13 +293,13 @@ export default function HistoryPage() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-[var(--color-chrome)] font-medium">Win Rate</span>
                 <span className="font-data text-lg font-bold text-[var(--color-ink)]">
-                  {winRate}%
+                  {stats.winRate}%
                 </span>
               </div>
               <div className="h-2 rounded-full overflow-hidden bg-[var(--color-chrome-light)]">
                 <div
                   className="h-full rounded-full bg-[var(--color-yes)] transition-all duration-500"
-                  style={{ width: `${winRate}%` }}
+                  style={{ width: `${stats.winRate}%` }}
                 />
               </div>
             </div>
@@ -242,7 +307,7 @@ export default function HistoryPage() {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[var(--color-chrome)] font-medium">Pending</span>
                 <span className="font-data text-lg font-bold text-[var(--color-live)]">
-                  {totalPending}
+                  {stats.pending}
                 </span>
               </div>
             </div>
@@ -250,7 +315,7 @@ export default function HistoryPage() {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[var(--color-chrome)] font-medium">Total Prediksi</span>
                 <span className="font-data text-lg font-bold text-[var(--color-ink)]">
-                  {MOCK_PREDICTIONS.length}
+                  {stats.total}
                 </span>
               </div>
             </div>
@@ -278,6 +343,18 @@ export default function HistoryPage() {
           </div>
 
           {/* Predictions Grid */}
+          {error ? (
+            <pre className="mb-4 whitespace-pre-wrap break-words font-data text-xs text-[var(--color-no)]">
+              {error}
+            </pre>
+          ) : null}
+
+          {isLoading ? (
+            <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center font-data text-xs text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
+              Loading history real...
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             <AnimatePresence mode="popLayout">
               {filteredPredictions.length > 0 ? (

@@ -20,7 +20,7 @@ export type StakeRecord = {
   userAddress: Address;
   side: boolean;
   amount: bigint;
-  txHash: Hex;
+  txHash: Hex | null;
   createdAt: number;
 };
 
@@ -139,7 +139,41 @@ export async function readStakeRecords() {
     userAddress: Address;
     side: number;
     amount: string;
-    txHash: Hex;
+    txHash: Hex | null;
+    createdAt: number;
+  }>;
+
+  return rows.map((row) => ({
+    marketId: row.marketId,
+    userAddress: row.userAddress,
+    side: row.side === 1,
+    amount: BigInt(row.amount),
+    txHash: row.txHash,
+    createdAt: row.createdAt,
+  }));
+}
+
+export async function readStakeRecordsByUser(user: Address) {
+  const localDb = await getLocalDb();
+  const rows = localDb
+    .prepare(
+      `SELECT
+        market_id AS marketId,
+        user_address AS userAddress,
+        side,
+        amount,
+        tx_hash AS txHash,
+        created_at AS createdAt
+       FROM stake_records
+       WHERE user_address = ?
+       ORDER BY created_at DESC`,
+    )
+    .all(user.toLowerCase()) as Array<{
+    marketId: number;
+    userAddress: Address;
+    side: number;
+    amount: string;
+    txHash: Hex | null;
     createdAt: number;
   }>;
 

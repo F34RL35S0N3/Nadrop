@@ -38,7 +38,12 @@ export default function MarketPage() {
   } = useSwipePredict();
 
   const loadLeaderboard = useCallback(async () => {
-    const response = await fetch("/api/leaderboard", { cache: "no-store" });
+    const params = address
+      ? `?${new URLSearchParams({ userAddress: address }).toString()}`
+      : "";
+    const response = await fetch(`/api/leaderboard${params}`, {
+      cache: "no-store",
+    });
     if (!response.ok) return;
 
     const data = (await response.json()) as LeaderboardResponse;

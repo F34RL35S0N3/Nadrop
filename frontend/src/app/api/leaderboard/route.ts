@@ -1,7 +1,11 @@
-import { NextResponse } from "next/server";
-import { formatUnits, type Address } from "viem";
+import { NextRequest, NextResponse } from "next/server";
+import { formatUnits, getAddress, isAddress, type Address } from "viem";
 import { readMarket } from "@/lib/contract";
 import { readStakeRecords } from "@/lib/server/localDb";
+import {
+  mergeStakeRecords,
+  readUserOnchainStakeRecords,
+} from "@/lib/server/userPositions";
 import type { LeaderboardEntry } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -22,9 +26,20 @@ function toNumberUsdc(amount: bigint) {
   return Number(formatUnits(amount, 6));
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const records = await readStakeRecords();
+    const userAddressParam = request.nextUrl.searchParams.get("userAddress");
+    const userAddress =
+      userAddressParam && isAddress(userAddressParam)
+        ? (getAddress(userAddressParam) as Address)
+        : null;
+    const dbRecords = await readStakeRecords();
+    const records = userAddress
+      ? mergeStakeRecords(
+          dbRecords,
+          await readUserOnchainStakeRecords(userAddress),
+        )
+      : dbRecords;
     const positionAmounts = new Map<string, bigint>();
     const marketIds = new Set<number>();
 
