@@ -38,6 +38,44 @@ export const publicClient = createPublicClient({
   transport: http(process.env.NEXT_PUBLIC_RPC_URL),
 });
 
+const retryableRpcPatterns = [
+  "requests limited",
+  "rate limit",
+  "too many requests",
+  "429",
+];
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableRpcError(error: unknown) {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+  return retryableRpcPatterns.some((pattern) => message.includes(pattern));
+}
+
+async function withRpcRetry<T>(operation: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+
+      if (!isRetryableRpcError(error)) {
+        throw error;
+      }
+
+      await sleep(500 * (attempt + 1));
+    }
+  }
+
+  throw lastError;
+}
+
 export const PREDICTION_MARKET_ABI = [
   {
     name: "markets",
@@ -116,12 +154,12 @@ export type Market = {
 
 export async function readMarket(id: number): Promise<Market> {
   const [deadline, resolved, outcome, totalYes, totalNo] =
-    await publicClient.readContract({
+    await withRpcRetry(() => publicClient.readContract({
       address: PREDICTION_MARKET_ADDRESS,
       abi: PREDICTION_MARKET_ABI,
       functionName: "markets",
       args: [BigInt(id)],
-    });
+    }));
 
   return {
     deadline,
@@ -133,40 +171,40 @@ export async function readMarket(id: number): Promise<Market> {
 }
 
 export async function readStake(id: number, user: Address, side: boolean) {
-  return publicClient.readContract({
+  return withRpcRetry(() => publicClient.readContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: PREDICTION_MARKET_ABI,
     functionName: "stakes",
     args: [BigInt(id), user, side],
-  });
+  }));
 }
 
 export async function readClaimed(id: number, user: Address) {
-  return publicClient.readContract({
+  return withRpcRetry(() => publicClient.readContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: PREDICTION_MARKET_ABI,
     functionName: "claimed",
     args: [BigInt(id), user],
-  });
+  }));
 }
 
 export async function readNextMarketId() {
-  const id = await publicClient.readContract({
+  const id = await withRpcRetry(() => publicClient.readContract({
     address: PREDICTION_MARKET_ADDRESS,
     abi: PREDICTION_MARKET_ABI,
     functionName: "nextMarketId",
-  });
+  }));
 
   return Number(id);
 }
 
 export async function readUsdcBalance(user: Address) {
-  const balance = await publicClient.readContract({
+  const balance = await withRpcRetry(() => publicClient.readContract({
     address: MOCK_USDC_ADDRESS,
     abi: MOCK_USDC_ABI,
     functionName: "balanceOf",
     args: [user],
-  });
+  }));
 
   return {
     raw: balance,

@@ -80,6 +80,8 @@ export function ClaimPanel({ market }: { market: Market | null }) {
   });
   const [status, setStatus] = useState<Status>({ text: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const userAddress = address ? getAddress(address) : undefined;
   const marketId = market ? marketIdToNumber(market.id) : 0;
   const winningStake = claimState.outcome
@@ -107,9 +109,12 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       outcome: rawMarket.outcome,
       claimed,
     });
+    setHasLoaded(true);
   }, [market, marketId, userAddress]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     refresh().catch((error) => {
       setStatus({ text: "error", error: extractError(error) });
     });
@@ -119,7 +124,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
     }, 15000);
 
     return () => window.clearInterval(interval);
-  }, [refresh]);
+  }, [isOpen, refresh]);
 
   async function getWalletClient() {
     if (!userAddress) throw new Error("Wallet belum login");
@@ -168,7 +173,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
   if (!market || !userAddress) return null;
 
   return (
-    <section className="mt-5 w-full max-w-xl rounded-[var(--radius-card)] border border-[var(--color-chrome-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]">
+    <section className="mt-3 w-full rounded-[var(--radius-card)] border border-[var(--color-chrome-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-data text-xs uppercase tracking-wider text-[var(--color-chrome)]">
           Claim
@@ -177,6 +182,25 @@ export function ClaimPanel({ market }: { market: Market | null }) {
           Balance {claimState.balance} mUSDC
         </span>
       </div>
+
+      {!isOpen ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="w-full rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-4 py-3 font-semibold text-[var(--color-ink)]"
+        >
+          Cek klaim
+        </button>
+      ) : null}
+
+      {isOpen && !hasLoaded ? (
+        <div className="font-data text-xs text-[var(--color-chrome)]">
+          Loading claim data...
+        </div>
+      ) : null}
+
+      {isOpen && hasLoaded ? (
+        <>
 
       <div className="mb-3 grid grid-cols-2 gap-2 font-data text-xs">
         <div className="rounded-[var(--radius-badge)] bg-[var(--color-yes-light)] px-3 py-2 text-[var(--color-yes)]">
@@ -223,6 +247,8 @@ export function ClaimPanel({ market }: { market: Market | null }) {
         <pre className="mt-2 whitespace-pre-wrap break-words font-data text-xs text-[var(--color-no)]">
           {status.error}
         </pre>
+      ) : null}
+        </>
       ) : null}
     </section>
   );
