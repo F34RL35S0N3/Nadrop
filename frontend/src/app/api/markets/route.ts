@@ -12,6 +12,7 @@ import {
   PREDICTION_MARKET_ADDRESS,
   readNextMarketId,
 } from "@/lib/contract";
+import { readRecentMarketSnapshots } from "@/lib/server/marketSnapshots";
 
 const CREATE_MARKET_ABI = {
   name: "createMarket",
@@ -44,6 +45,24 @@ function getBackendPrivateKey() {
   }
 
   return privateKey as Hex;
+}
+
+export async function GET() {
+  try {
+    const markets = await readRecentMarketSnapshots();
+
+    return NextResponse.json({
+      markets,
+      cachedAt: Date.now(),
+    });
+  } catch (error) {
+    console.error("Read markets failed", error);
+
+    return NextResponse.json(
+      { error: "Read markets failed", details: errorMessage(error) },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {

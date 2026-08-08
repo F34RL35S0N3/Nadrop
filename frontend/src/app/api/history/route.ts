@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { formatUnits, getAddress, isAddress, type Address } from "viem";
-import { readMarket } from "@/lib/contract";
 import { getMarketMeta } from "@/lib/markets";
 import { readStakeRecordsByUser } from "@/lib/server/localDb";
+import { readMarketSnapshotMap } from "@/lib/server/marketSnapshots";
 import {
   mergeStakeRecords,
   readUserOnchainStakeRecords,
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       await readStakeRecordsByUser(userAddress),
       await readUserOnchainStakeRecords(userAddress),
     );
+    const marketMap = await readMarketSnapshotMap();
     const predictions: Prediction[] = [];
     const stats: HistoryStats = {
       wins: 0,
@@ -55,10 +56,14 @@ export async function GET(request: NextRequest) {
     };
 
     for (const record of records) {
-      const market = await readMarket(record.marketId);
+      const market = marketMap.get(record.marketId);
+      if (!market) continue;
+
       const meta = getMarketMeta(record.marketId);
-      const totalPool = market.totalYes + market.totalNo;
-      const winningPool = market.outcome ? market.totalYes : market.totalNo;
+      const totalYes = BigInt(market.totalYes);
+      const totalNo = BigInt(market.totalNo);
+      const totalPool = totalYes + totalNo;
+      const winningPool = market.outcome ? totalYes : totalNo;
       const stake = toUsdc(record.amount);
       let status: Prediction["status"] = "pending";
       let payout: number | null = null;

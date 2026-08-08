@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { formatUnits, getAddress, isAddress, type Address } from "viem";
-import { readMarket } from "@/lib/contract";
 import { readStakeRecords } from "@/lib/server/localDb";
+import { readMarketSnapshotMap } from "@/lib/server/marketSnapshots";
 import {
   mergeStakeRecords,
   readUserOnchainStakeRecords,
@@ -41,19 +41,13 @@ export async function GET(request: NextRequest) {
         )
       : dbRecords;
     const positionAmounts = new Map<string, bigint>();
-    const marketIds = new Set<number>();
 
     for (const record of records) {
-      marketIds.add(record.marketId);
-
       const key = `${record.marketId}:${record.userAddress.toLowerCase()}:${record.side ? 1 : 0}`;
       positionAmounts.set(key, (positionAmounts.get(key) ?? BigInt(0)) + record.amount);
     }
 
-    const markets = new Map<number, Awaited<ReturnType<typeof readMarket>>>();
-    for (const marketId of marketIds) {
-      markets.set(marketId, await readMarket(marketId));
-    }
+    const markets = await readMarketSnapshotMap();
 
     const users = new Map<string, UserStats>();
 
@@ -66,8 +60,10 @@ export async function GET(request: NextRequest) {
 
       if (!market?.resolved) continue;
 
-      const totalPool = market.totalYes + market.totalNo;
-      const winningPool = market.outcome ? market.totalYes : market.totalNo;
+      const totalYes = BigInt(market.totalYes);
+      const totalNo = BigInt(market.totalNo);
+      const totalPool = totalYes + totalNo;
+      const winningPool = market.outcome ? totalYes : totalNo;
       const stats =
         users.get(user) ??
         ({

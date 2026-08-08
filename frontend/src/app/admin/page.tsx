@@ -3,12 +3,11 @@
 import { FormEvent, useEffect, useState } from "react";
 import { formatUnits } from "viem";
 import { NetworkBadge, WalletChip } from "@/components/shared/WalletChip";
-import { readMarket, readNextMarketId, type Market } from "@/lib/contract";
+import type { Market } from "@/lib/contract";
 import { getResolvedMarketMeta, saveCustomMarketMeta } from "@/lib/markets";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
 const marketListLimit = 8;
-const rpcDelayMs = 140;
 
 type Status = {
   text: string;
@@ -21,9 +20,14 @@ type MarketRow = {
   market: Market;
 };
 
-function sleep(ms: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
+type MarketSnapshot = {
+  id: number;
+  deadline: string;
+  resolved: boolean;
+  outcome: boolean;
+  totalYes: string;
+  totalNo: string;
+};
 
 function formatCountdown(deadline: bigint) {
   const remaining = Math.max(0, Number(deadline) * 1000 - Date.now());
@@ -68,21 +72,26 @@ export default function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function refresh() {
-    const nextId = await readNextMarketId();
-    const startId = Math.max(0, nextId - marketListLimit);
-    const ids = Array.from(
-      { length: nextId - startId },
-      (_, index) => startId + index,
-    ).reverse();
-    const nextRows: MarketRow[] = [];
+    const response = await fetch("/api/markets", { cache: "no-store" });
+    const body = await readJson(response);
 
-    for (const id of ids) {
-      const market = await readMarket(id);
-      nextRows.push({ id, market });
-      await sleep(rpcDelayMs);
+    if (!response.ok) {
+      throw new Error(bodyError(response, body));
     }
 
-    setRows(nextRows);
+    const snapshots = (body.markets ?? []) as MarketSnapshot[];
+    setRows(
+      snapshots.slice(0, marketListLimit).map((snapshot) => ({
+        id: snapshot.id,
+        market: {
+          deadline: BigInt(snapshot.deadline),
+          resolved: snapshot.resolved,
+          outcome: snapshot.outcome,
+          totalYes: BigInt(snapshot.totalYes),
+          totalNo: BigInt(snapshot.totalNo),
+        },
+      })),
+    );
   }
 
   useEffect(() => {
@@ -95,7 +104,7 @@ export default function AdminPage() {
 
     const interval = window.setInterval(() => {
       refresh().catch(console.error);
-    }, 15000);
+    }, 20_000);
 
     return () => window.clearInterval(interval);
   }, []);

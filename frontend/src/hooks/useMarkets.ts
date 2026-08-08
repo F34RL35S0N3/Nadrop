@@ -1,45 +1,50 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Market } from "@/lib/types";
-import {
-  PREDICTION_MARKET_ADDRESS,
-  readMarket,
-  readNextMarketId,
-} from "@/lib/contract";
+import { PREDICTION_MARKET_ADDRESS } from "@/lib/contract";
 import { getResolvedMarketMeta } from "@/lib/markets";
+import { Market } from "@/lib/types";
 
-const marketLimit = 12;
-const rpcDelayMs = 140;
+type MarketSnapshot = {
+  id: number;
+  deadline: string;
+  resolved: boolean;
+  outcome: boolean;
+  totalYes: string;
+  totalNo: string;
+};
 
-function sleep(ms: number) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
-}
+type MarketsResponse = {
+  markets?: MarketSnapshot[];
+  error?: string;
+  details?: string;
+};
 
-function toUiMarket(id: number, market: Awaited<ReturnType<typeof readMarket>>): Market {
-  const totalYes = Number(market.totalYes) / 1_000_000;
-  const totalNo = Number(market.totalNo) / 1_000_000;
+function toUiMarket(snapshot: MarketSnapshot): Market {
+  const totalYes = Number(BigInt(snapshot.totalYes)) / 1_000_000;
+  const totalNo = Number(BigInt(snapshot.totalNo)) / 1_000_000;
   const totalStake = totalYes + totalNo;
   const yesPercentage =
     totalStake === 0 ? 50 : Math.round((totalYes / totalStake) * 100);
-  const meta = getResolvedMarketMeta(id);
+  const deadline = Number(BigInt(snapshot.deadline)) * 1000;
+  const meta = getResolvedMarketMeta(snapshot.id);
 
   return {
-    id: String(id),
+    id: String(snapshot.id),
     category: meta.category,
     question: meta.question,
-    deadline: Number(market.deadline) * 1000,
+    deadline,
     yesPercentage,
     noPercentage: 100 - yesPercentage,
     totalStake,
     participants: Math.round(totalStake),
     contractAddress: PREDICTION_MARKET_ADDRESS,
-    resolveDescription: market.resolved
-      ? `Market sudah di-resolve dengan hasil ${market.outcome ? "YA" : "TIDAK"}.`
+    resolveDescription: snapshot.resolved
+      ? `Market sudah di-resolve dengan hasil ${snapshot.outcome ? "YA" : "TIDAK"}.`
       : "Admin akan memverifikasi jawaban setelah deadline.",
-    status: market.resolved
+    status: snapshot.resolved
       ? "resolved"
-      : Date.now() >= Number(market.deadline) * 1000
+      : Date.now() >= deadline
         ? "expired"
         : "active",
   };
@@ -58,28 +63,21 @@ export function useMarkets(options: UseMarketsOptions = {}) {
     let cancelled = false;
 
     async function loadMarkets() {
-      const nextId = await readNextMarketId();
-      const startId = Math.max(0, nextId - marketLimit);
-      const ids = Array.from(
-        { length: nextId - startId },
-        (_, index) => startId + index,
-      ).reverse();
-      const nextMarkets: Market[] = [];
+      const response = await fetch("/api/markets", { cache: "no-store" });
+      const data = (await response.json()) as MarketsResponse;
 
-      for (const id of ids) {
-        const market = await readMarket(id);
-        const uiMarket = toUiMarket(id, market);
-
-        if (
-          statusFilter === "all" ||
-          (statusFilter === "active" && uiMarket.status === "active") ||
-          (statusFilter === "closed" && uiMarket.status !== "active")
-        ) {
-          nextMarkets.push(uiMarket);
-        }
-
-        await sleep(rpcDelayMs);
+      if (!response.ok) {
+        throw new Error(data.details ?? data.error ?? "Markets gagal dibaca");
       }
+
+      const nextMarkets = (data.markets ?? [])
+        .map(toUiMarket)
+        .filter(
+          (market) =>
+            statusFilter === "all" ||
+            (statusFilter === "active" && market.status === "active") ||
+            (statusFilter === "closed" && market.status !== "active"),
+        );
 
       if (!cancelled) {
         setMarkets(nextMarkets);
@@ -90,7 +88,7 @@ export function useMarkets(options: UseMarketsOptions = {}) {
     loadMarkets().catch(console.error);
     const interval = window.setInterval(() => {
       loadMarkets().catch(console.error);
-    }, 15000);
+    }, 20_000);
 
     return () => {
       cancelled = true;
