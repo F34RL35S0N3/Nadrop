@@ -16,12 +16,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SwipePredict - Prediction Markets as Fast as Swiping",
+  title: "Nadrop - Prediction Markets as Fast as Swiping",
   description:
     "Predict yes/no outcomes for short events, stake tokens, and get instant on-chain settlement through Monad testnet and x402 protocol.",
   keywords: ["prediction market", "monad", "x402", "web3", "swipe"],
   openGraph: {
-    title: "SwipePredict",
+    title: "Nadrop",
     description:
       "Prediction markets as fast as swiping, with instant on-chain settlement.",
     type: "website",

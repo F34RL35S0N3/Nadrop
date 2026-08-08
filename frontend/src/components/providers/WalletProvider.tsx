@@ -109,7 +109,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         appearance: {
           theme: "light",
           accentColor: "#0E9F6E",
-          landingHeader: "Login ke SwipePredict",
+          landingHeader: "Login ke Nadrop",
           loginMessage: "Pakai email Privy atau MetaMask.",
           walletList: ["detected_ethereum_wallets"],
           walletChainType: "ethereum-only",

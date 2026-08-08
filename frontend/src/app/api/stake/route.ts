@@ -261,9 +261,9 @@ export const POST =
             network: MONAD_NETWORK,
             maxTimeoutSeconds: 120,
           },
-          description: "SwipePredict 1 mUSDC market stake",
+          description: "Nadrop 1 mUSDC market stake",
           mimeType: "application/json",
-          serviceName: "SwipePredict",
+          serviceName: "Nadrop",
           unpaidResponseBody: () => ({
             contentType: "application/json",
             body: {
