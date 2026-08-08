@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { formatUnits } from "viem";
 import { NetworkBadge, WalletChip } from "@/components/shared/WalletChip";
-import type { Market } from "@/lib/contract";
-import { getResolvedMarketMeta, loadRemoteMarketMeta, saveMarketMeta } from "@/lib/markets";
+import {
+  getResolvedMarketMeta,
+  saveMarketMeta,
+} from "@/lib/markets";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
 const marketListLimit = 8;
@@ -17,29 +18,13 @@ type Status = {
 
 type MarketRow = {
   id: number;
-  market: Market;
-};
-
-type MarketSnapshot = {
-  id: number;
-  deadline: string;
-  resolved: boolean;
-  outcome: boolean;
+  question: string;
+  category: string;
   totalYes: string;
   totalNo: string;
+  resolved: boolean;
+  outcome: boolean;
 };
-
-function formatCountdown(deadline: bigint) {
-  const remaining = Math.max(0, Number(deadline) * 1000 - Date.now());
-  const minutes = Math.floor(remaining / 60000);
-  const seconds = Math.floor((remaining % 60000) / 1000);
-
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-
-function formatUsdc(amount: bigint) {
-  return `${formatUnits(amount, 6)} mUSDC`;
-}
 
 async function readJson(response: Response) {
   const text = await response.text();
@@ -72,28 +57,14 @@ export default function AdminPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function refresh() {
-    await loadRemoteMarketMeta().catch(console.error);
-
-    const response = await fetch("/api/markets", { cache: "no-store" });
+    const response = await fetch("/api/admin-markets", { cache: "no-store" });
     const body = await readJson(response);
 
     if (!response.ok) {
       throw new Error(bodyError(response, body));
     }
 
-    const snapshots = (body.markets ?? []) as MarketSnapshot[];
-    setRows(
-      snapshots.slice(0, marketListLimit).map((snapshot) => ({
-        id: snapshot.id,
-        market: {
-          deadline: BigInt(snapshot.deadline),
-          resolved: snapshot.resolved,
-          outcome: snapshot.outcome,
-          totalYes: BigInt(snapshot.totalYes),
-          totalNo: BigInt(snapshot.totalNo),
-        },
-      })),
-    );
+    setRows((body.markets ?? []) as MarketRow[]);
   }
 
   useEffect(() => {
@@ -103,12 +74,6 @@ export default function AdminPage() {
         error: error instanceof Error ? error.message : String(error),
       });
     });
-
-    const interval = window.setInterval(() => {
-      refresh().catch(console.error);
-    }, 20_000);
-
-    return () => window.clearInterval(interval);
   }, []);
 
   async function createMarket(event: FormEvent<HTMLFormElement>) {
@@ -134,17 +99,29 @@ export default function AdminPage() {
       }
 
       const marketId = Number(body.marketId);
-      await saveMarketMeta(marketId, {
+      const meta = {
         question: question.trim() || `Market #${marketId}`,
         category: category.trim() || "Umum",
-      }).catch(console.error);
+      };
+      await saveMarketMeta(marketId, meta).catch(console.error);
 
       setQuestion("");
+      setRows((current) => [
+        {
+          id: marketId,
+          question: meta.question,
+          category: meta.category,
+          totalYes: "0",
+          totalNo: "0",
+          resolved: false,
+          outcome: false,
+        },
+        ...current,
+      ]);
       setStatus({
         text: `market #${marketId} created`,
         txHash: String(body.txHash),
       });
-      await refresh();
     } catch (error) {
       setStatus({
         text: "error",
@@ -181,7 +158,17 @@ export default function AdminPage() {
         text: `market #${marketId} resolved`,
         txHash: String(body.txHash),
       });
-      await refresh();
+      setRows((current) =>
+        current.map((row) =>
+          row.id === marketId
+            ? {
+                ...row,
+                resolved: true,
+                outcome,
+              }
+            : row,
+        ),
+      );
     } catch (error) {
       setStatus({
         text: "error",
@@ -280,65 +267,81 @@ export default function AdminPage() {
       </form>
 
       <section className="grid gap-3">
-        <h2 className="font-data text-sm uppercase tracking-wider text-[var(--color-chrome)]">
-          Market List
-        </h2>
-        {rows.map(({ id, market }) => {
-          const meta = getResolvedMarketMeta(id);
-          const expired = Date.now() >= Number(market.deadline) * 1000;
-          const canResolve = expired && !market.resolved;
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-data text-sm uppercase tracking-wider text-[var(--color-chrome)]">
+            Market List
+          </h2>
+          <button
+            type="button"
+            onClick={() => refresh().catch((error) => {
+              setStatus({
+                text: "error",
+                error: error instanceof Error ? error.message : String(error),
+              });
+            })}
+            disabled={isSubmitting}
+            className="rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-3 py-2 font-data text-xs text-[var(--color-chrome)] disabled:opacity-50"
+          >
+            Refresh manual
+          </button>
+        </div>
+        {rows.length === 0 ? (
+          <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center font-data text-xs text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
+            Kosong. Market baru akan muncul setelah dibuat.
+          </div>
+        ) : null}
+        {rows.slice(0, marketListLimit).map((market) => {
+          const meta = getResolvedMarketMeta(market.id);
 
           return (
             <article
-              key={id}
+              key={market.id}
               className="rounded-[var(--radius-card)] border border-[var(--color-chrome-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]"
             >
               <div className="mb-2 flex flex-wrap justify-between gap-3 font-data text-xs text-[var(--color-chrome)]">
                 <span>
-                  [{meta.category}] market #{id}
+                  [{market.category || meta.category}] market #{market.id}
                 </span>
                 <span>
                   {market.resolved
                     ? `resolved: ${market.outcome ? "YA" : "TIDAK"}`
-                    : expired
-                      ? "menunggu resolve"
-                      : `berakhir ${formatCountdown(market.deadline)}`}
+                    : "menunggu verifikasi"}
                 </span>
               </div>
               <h3 className="mb-4 font-display text-xl font-bold text-[var(--color-ink)]">
-                {meta.question}
+                {market.question || meta.question}
               </h3>
               <div className="mb-4 grid gap-2 font-data text-sm sm:grid-cols-2">
                 <div className="rounded-[var(--radius-chip)] border border-[var(--color-yes-mid)] bg-[var(--color-yes-light)] p-3 text-[var(--color-yes)]">
-                  YA pool: {formatUsdc(market.totalYes)}
+                  YA pool: {market.totalYes} mUSDC
                 </div>
                 <div className="rounded-[var(--radius-chip)] border border-[var(--color-no-mid)] bg-[var(--color-no-light)] p-3 text-[var(--color-no)]">
-                  TIDAK pool: {formatUsdc(market.totalNo)}
+                  TIDAK pool: {market.totalNo} mUSDC
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => resolveMarket(id, true)}
-                  disabled={isSubmitting || !canResolve}
+                  onClick={() => resolveMarket(market.id, true)}
+                  disabled={isSubmitting || market.resolved}
                   className="rounded-[var(--radius-button)] border border-[var(--color-yes-mid)] px-4 py-2 font-data text-sm text-[var(--color-yes)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Verifikasi jawaban: YA
                 </button>
                 <button
                   type="button"
-                  onClick={() => resolveMarket(id, false)}
-                  disabled={isSubmitting || !canResolve}
+                  onClick={() => resolveMarket(market.id, false)}
+                  disabled={isSubmitting || market.resolved}
                   className="rounded-[var(--radius-button)] border border-[var(--color-no-mid)] px-4 py-2 font-data text-sm text-[var(--color-no)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Verifikasi jawaban: TIDAK
                 </button>
               </div>
-              {!canResolve && !market.resolved ? (
-                <div className="mt-3 font-data text-xs text-[var(--color-chrome)]">
-                  aktif setelah deadline
-                </div>
-              ) : null}
+              <div className="mt-3 font-data text-xs text-[var(--color-chrome)]">
+                {market.resolved
+                  ? "Market sudah diverifikasi dan tidak bisa diverifikasi ulang."
+                  : "Kalau TooEarly, market belum lewat deadline on-chain."}
+              </div>
             </article>
           );
         })}

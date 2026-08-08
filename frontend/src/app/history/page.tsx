@@ -4,9 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClaimPanel } from "@/components/market/ClaimPanel";
 import { useWallet } from "@/components/providers/WalletProvider";
-import { useMarkets } from "@/hooks/useMarkets";
 import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
-import { Prediction } from "@/lib/types";
+import { Market, Prediction } from "@/lib/types";
 
 type FilterTab = "semua" | "menang" | "kalah" | "pending";
 
@@ -42,7 +41,31 @@ const emptyStats: HistoryStats = {
   total: 0,
 };
 
-function PredictionCard({ prediction }: { prediction: Prediction }) {
+function predictionToMarket(prediction: Prediction): Market {
+  return {
+    id: prediction.marketId,
+    category: "Riwayat",
+    question: prediction.question,
+    deadline: Date.now(),
+    yesPercentage: 0,
+    noPercentage: 0,
+    totalStake: prediction.stake,
+    participants: 1,
+    contractAddress: "",
+    resolveDescription: "Klaim dicek langsung dari kontrak.",
+    status: prediction.status === "pending" ? "active" : "resolved",
+  };
+}
+
+function PredictionCard({
+  prediction,
+  isSelected,
+  onSelect,
+}: {
+  prediction: Prediction;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
   const statusConfig = {
     won: {
       icon: "✓",
@@ -74,7 +97,18 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className={`bg-[var(--color-surface)] rounded-[var(--radius-card)] border ${config.border} p-4 shadow-[var(--shadow-stack)]`}
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`cursor-pointer bg-[var(--color-surface)] rounded-[var(--radius-card)] border ${config.border} p-4 shadow-[var(--shadow-stack)] outline-none transition-colors focus:border-[var(--color-ink)] ${
+        isSelected ? "ring-2 ring-[var(--color-yes)]" : ""
+      }`}
     >
       <div className="flex items-start gap-3">
         {/* Status icon */}
@@ -118,13 +152,14 @@ function PredictionCard({ prediction }: { prediction: Prediction }) {
                 href={`${MONAD_TESTNET_EXPLORER}/tx/${prediction.txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(event) => event.stopPropagation()}
                 className="font-data text-[11px] text-[var(--color-chrome)] hover:text-[var(--color-yes)] transition-colors"
               >
                 tx: {truncateAddress(prediction.txHash)}
               </a>
             ) : (
               <span className="font-data text-[11px] text-[var(--color-chrome)]">
-                tx: backfilled on-chain
+                posisi terdeteksi on-chain
               </span>
             )}
             {prediction.settlementTime && (
@@ -146,10 +181,11 @@ export default function HistoryPage() {
   const { address, isConnected } = useWallet();
   const [activeFilter, setActiveFilter] = useState<FilterTab>("semua");
   const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [selectedPrediction, setSelectedPrediction] =
+    useState<Prediction | null>(null);
   const [stats, setStats] = useState<HistoryStats>(emptyStats);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { markets: closedMarkets } = useMarkets({ status: "closed" });
 
   const loadHistory = useCallback(async () => {
     if (!address) {
@@ -172,6 +208,10 @@ export default function HistoryPage() {
       }
 
       setPredictions(data.predictions ?? []);
+      setSelectedPrediction((current) => {
+        if (!current) return null;
+        return (data.predictions ?? []).find((item) => item.id === current.id) ?? null;
+      });
       setStats(data.stats ?? emptyStats);
       setError(null);
     } catch (err) {
@@ -212,42 +252,6 @@ export default function HistoryPage() {
           </p>
         ) : null}
       </div>
-
-      <section className="mb-6">
-        <div className="mb-3">
-          <h2 className="font-display text-xl font-bold text-[var(--color-ink)]">
-            Klaim Reward
-          </h2>
-          <p className="text-sm text-[var(--color-chrome)]">
-            Market yang sudah berakhir atau resolved muncul di sini.
-          </p>
-        </div>
-
-        {closedMarkets.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {closedMarkets.map((market) => (
-              <div key={market.id}>
-                <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]">
-                  <div className="mb-2 flex items-center justify-between font-data text-xs text-[var(--color-chrome)]">
-                    <span>
-                      [{market.category}] market #{market.id}
-                    </span>
-                    <span>{market.status}</span>
-                  </div>
-                  <h3 className="font-display text-lg font-bold text-[var(--color-ink)]">
-                    {market.question}
-                  </h3>
-                </div>
-                <ClaimPanel market={market} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 text-center text-sm text-[var(--color-chrome)] shadow-[var(--shadow-stack)]">
-            Belum ada market selesai untuk diklaim.
-          </div>
-        )}
-      </section>
 
       <div className="flex flex-col lg:flex-row lg:gap-8 w-full">
         {/* ── Left: Stats Panel (Desktop sidebar / Mobile top) ── */}
@@ -343,6 +347,32 @@ export default function HistoryPage() {
           </div>
 
           {/* Predictions Grid */}
+          {selectedPrediction ? (
+            <div className="mb-4 rounded-[var(--radius-card)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-stack)]">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-lg font-bold text-[var(--color-ink)]">
+                    Klaim Reward
+                  </h2>
+                  <p className="text-sm text-[var(--color-chrome)]">
+                    {selectedPrediction.question}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPrediction(null)}
+                  className="rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-3 py-2 font-data text-xs text-[var(--color-chrome)]"
+                >
+                  Tutup
+                </button>
+              </div>
+              <ClaimPanel
+                market={predictionToMarket(selectedPrediction)}
+                prediction={selectedPrediction}
+              />
+            </div>
+          ) : null}
+
           {error ? (
             <pre className="mb-4 whitespace-pre-wrap break-words font-data text-xs text-[var(--color-no)]">
               {error}
@@ -359,7 +389,12 @@ export default function HistoryPage() {
             <AnimatePresence mode="popLayout">
               {filteredPredictions.length > 0 ? (
                 filteredPredictions.map((prediction) => (
-                  <PredictionCard key={prediction.id} prediction={prediction} />
+                  <PredictionCard
+                    key={prediction.id}
+                    prediction={prediction}
+                    isSelected={selectedPrediction?.id === prediction.id}
+                    onSelect={() => setSelectedPrediction(prediction)}
+                  />
                 ))
               ) : (
                 <motion.div

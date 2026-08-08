@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import type { Address, Hex } from "viem";
+import { MARKET_RESET_ID } from "@/lib/server/reset";
 import { getSupabaseAdmin } from "@/lib/server/supabase";
 
 type Statement = {
@@ -171,6 +172,7 @@ export async function readStakeRecords() {
     const { data, error } = await supabase
       .from("stake_records")
       .select("market_id,user_address,side,amount,tx_hash,created_at")
+      .gte("market_id", MARKET_RESET_ID)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -195,12 +197,13 @@ export async function readStakeRecords() {
         user_address AS userAddress,
         side,
         amount,
-        tx_hash AS txHash,
-        created_at AS createdAt
+       tx_hash AS txHash,
+       created_at AS createdAt
        FROM stake_records
+       WHERE market_id >= ?
        ORDER BY created_at DESC`,
     )
-    .all() as Array<{
+    .all(MARKET_RESET_ID) as Array<{
     marketId: number;
     userAddress: Address;
     side: number;
@@ -226,6 +229,7 @@ export async function readStakeRecordsByUser(user: Address) {
       .from("stake_records")
       .select("market_id,user_address,side,amount,tx_hash,created_at")
       .eq("user_address", user.toLowerCase())
+      .gte("market_id", MARKET_RESET_ID)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -251,12 +255,13 @@ export async function readStakeRecordsByUser(user: Address) {
         side,
         amount,
         tx_hash AS txHash,
-        created_at AS createdAt
+       created_at AS createdAt
        FROM stake_records
        WHERE user_address = ?
+       AND market_id >= ?
        ORDER BY created_at DESC`,
     )
-    .all(user.toLowerCase()) as Array<{
+    .all(user.toLowerCase(), MARKET_RESET_ID) as Array<{
     marketId: number;
     userAddress: Address;
     side: number;

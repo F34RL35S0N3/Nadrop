@@ -1,4 +1,5 @@
 import { readMarket, readNextMarketId } from "@/lib/contract";
+import { MARKET_RESET_ID } from "@/lib/server/reset";
 
 export type MarketSnapshot = {
   id: number;
@@ -32,7 +33,7 @@ async function mapWithConcurrency<T, R>(
 
 async function loadSnapshots() {
   const nextId = await readNextMarketId();
-  const startId = Math.max(0, nextId - marketLimit);
+  const startId = Math.max(MARKET_RESET_ID, nextId - marketLimit);
   const ids = Array.from(
     { length: nextId - startId },
     (_, index) => startId + index,

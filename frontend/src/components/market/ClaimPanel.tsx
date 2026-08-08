@@ -22,7 +22,7 @@ import {
   readUsdcBalance,
 } from "@/lib/contract";
 import { getSavedClaimTxHash, saveClaimTxHash } from "@/lib/claimTxStore";
-import { Market } from "@/lib/types";
+import { Market, Prediction } from "@/lib/types";
 
 const explorerTxUrl = "https://testnet.monadvision.com/tx/";
 const explorerAddressUrl = "https://testnet.monadvision.com/address/";
@@ -71,7 +71,47 @@ function marketIdToNumber(id: string) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function ClaimPanel({ market }: { market: Market | null }) {
+function toRawUsdc(amount: number) {
+  return BigInt(Math.round(amount * 1_000_000));
+}
+
+function stateFromPrediction(prediction: Prediction): ClaimState {
+  const stake = toRawUsdc(prediction.stake);
+  const choiceIsYes = prediction.choice === "YA";
+  const resolved = prediction.status !== "pending";
+  const outcome =
+    prediction.status === "won"
+      ? choiceIsYes
+      : prediction.status === "lost"
+        ? !choiceIsYes
+        : false;
+
+  return {
+    yesStake: choiceIsYes ? stake : BigInt(0),
+    noStake: choiceIsYes ? BigInt(0) : stake,
+    balance: "0",
+    resolved,
+    outcome,
+    claimed: false,
+  };
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number) {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error("RPC timeout")), ms);
+    }),
+  ]);
+}
+
+export function ClaimPanel({
+  market,
+  prediction,
+}: {
+  market: Market | null;
+  prediction?: Prediction;
+}) {
   const { address } = useWallet();
   const { wallets } = useWallets();
   const [claimState, setClaimState] = useState<ClaimState>({
@@ -97,32 +137,43 @@ export function ClaimPanel({ market }: { market: Market | null }) {
   const refresh = useCallback(async () => {
     if (!market || !userAddress) return;
 
-    const rawMarket = await readMarket(marketId);
-    const yesStake = await readStake(marketId, userAddress, true);
-    const noStake = await readStake(marketId, userAddress, false);
-    const claimed = await readClaimed(marketId, userAddress);
-    const balance = await readUsdcBalance(userAddress);
+    const [rawMarket, yesStake, noStake, claimed, balance, savedTxHash] =
+      await Promise.allSettled([
+        withTimeout(readMarket(marketId), 3000),
+        withTimeout(readStake(marketId, userAddress, true), 3000),
+        withTimeout(readStake(marketId, userAddress, false), 3000),
+        withTimeout(readClaimed(marketId, userAddress), 3000),
+        withTimeout(readUsdcBalance(userAddress), 3000),
+        getSavedClaimTxHash(marketId, userAddress),
+      ]);
 
-    setClaimState({
-      yesStake,
-      noStake,
-      balance: balance.formatted,
-      resolved: rawMarket.resolved,
-      outcome: rawMarket.outcome,
-      claimed,
+    setClaimState((current) => {
+      const savedClaimed =
+        savedTxHash.status === "fulfilled" && Boolean(savedTxHash.value);
+      return {
+        yesStake: yesStake.status === "fulfilled" ? yesStake.value : current.yesStake,
+        noStake: noStake.status === "fulfilled" ? noStake.value : current.noStake,
+        balance: balance.status === "fulfilled" ? balance.value.formatted : current.balance,
+        resolved:
+          rawMarket.status === "fulfilled" ? rawMarket.value.resolved : current.resolved,
+        outcome:
+          rawMarket.status === "fulfilled" ? rawMarket.value.outcome : current.outcome,
+        claimed:
+          claimed.status === "fulfilled" ? claimed.value || savedClaimed : current.claimed || savedClaimed,
+      };
     });
     setHasLoaded(true);
 
-    if (claimed) {
-      const savedTxHash = await getSavedClaimTxHash(marketId, userAddress);
-
+    if (savedTxHash.status === "fulfilled" && savedTxHash.value) {
       setStatus({
         text: "diklaim",
-        txHash: savedTxHash ?? undefined,
-        detailUrl: savedTxHash ? undefined : `${explorerAddressUrl}${userAddress}`,
-        notice: savedTxHash
-          ? undefined
-          : "Claim sudah tercatat on-chain. Tx hash lama belum ada di cache lokal.",
+        txHash: savedTxHash.value,
+      });
+    } else if (claimed.status === "fulfilled" && claimed.value) {
+      setStatus({
+        text: "diklaim",
+        detailUrl: `${explorerAddressUrl}${userAddress}`,
+        notice: "Claim sudah tercatat on-chain. Tx hash lama belum ada di cache lokal.",
       });
     } else {
       setStatus((current) =>
@@ -130,6 +181,16 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       );
     }
   }, [market, marketId, userAddress]);
+
+  function openClaim() {
+    if (prediction) {
+      setClaimState(stateFromPrediction(prediction));
+      setHasLoaded(true);
+      setStatus({ text: "syncing claim status" });
+    }
+
+    setIsOpen(true);
+  }
 
   useEffect(() => {
     if (!isOpen) return;
@@ -145,6 +206,12 @@ export function ClaimPanel({ market }: { market: Market | null }) {
 
     return () => window.clearInterval(interval);
   }, [isOpen, refresh]);
+
+  useEffect(() => {
+    setIsOpen(false);
+    setHasLoaded(false);
+    setStatus({ text: "idle" });
+  }, [marketId, userAddress]);
 
   async function getWalletClient() {
     if (!userAddress) throw new Error("Wallet belum login");
@@ -209,7 +276,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       {!isOpen ? (
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
+          onClick={openClaim}
           className="w-full rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] px-4 py-3 font-semibold text-[var(--color-ink)]"
         >
           Cek klaim

@@ -3,10 +3,6 @@ import { formatUnits, getAddress, isAddress, type Address } from "viem";
 import { readMarketMetadataMap } from "@/lib/server/marketMetadata";
 import { readStakeRecordsByUser } from "@/lib/server/localDb";
 import { readMarketSnapshotMap } from "@/lib/server/marketSnapshots";
-import {
-  mergeStakeRecords,
-  readUserOnchainStakeRecords,
-} from "@/lib/server/userPositions";
 import type { Prediction } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -40,10 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userAddress = getAddress(userAddressParam) as Address;
-    const records = mergeStakeRecords(
-      await readStakeRecordsByUser(userAddress),
-      await readUserOnchainStakeRecords(userAddress),
-    );
+    const records = await readStakeRecordsByUser(userAddress);
     const marketMap = await readMarketSnapshotMap();
     const metadataMap = await readMarketMetadataMap();
     const predictions: Prediction[] = [];
@@ -92,7 +85,7 @@ export async function GET(request: NextRequest) {
 
       stats.total += 1;
       predictions.push({
-        id: `${record.marketId}-${record.side ? "yes" : "no"}`,
+        id: record.txHash ?? `${record.marketId}-${record.side ? "yes" : "no"}`,
         marketId: String(record.marketId),
         question: meta.question,
         choice: record.side ? "YA" : "TIDAK",
