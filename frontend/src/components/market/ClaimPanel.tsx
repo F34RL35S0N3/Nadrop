@@ -17,6 +17,7 @@ import {
   PREDICTION_MARKET_ADDRESS,
   publicClient,
   readClaimed,
+  readLatestClaimTxHash,
   readMarket,
   readStake,
   readUsdcBalance,
@@ -109,6 +110,19 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       outcome: rawMarket.outcome,
       claimed,
     });
+
+    if (claimed) {
+      const txHash = await readLatestClaimTxHash(marketId, userAddress);
+      setStatus({
+        text: "diklaim",
+        txHash: txHash ?? undefined,
+      });
+    } else {
+      setStatus((current) =>
+        current.text === "diklaim" ? { text: "idle" } : current,
+      );
+    }
+
     setHasLoaded(true);
   }, [market, marketId, userAddress]);
 

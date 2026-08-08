@@ -4,6 +4,7 @@ import {
   formatUnits,
   http,
   type Address,
+  type Hex,
 } from "viem";
 
 export const PREDICTION_MARKET_ADDRESS =
@@ -125,6 +126,15 @@ export const PREDICTION_MARKET_ABI = [
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
   },
+  {
+    name: "Claimed",
+    type: "event",
+    inputs: [
+      { name: "marketId", type: "uint256", indexed: true },
+      { name: "user", type: "address", indexed: true },
+      { name: "payout", type: "uint256", indexed: false },
+    ],
+  },
 ] as const;
 
 export const MOCK_USDC_ABI = [
@@ -210,4 +220,29 @@ export async function readUsdcBalance(user: Address) {
     raw: balance,
     formatted: formatUnits(balance, 6),
   };
+}
+
+export async function readLatestClaimTxHash(id: number, user: Address) {
+  const logs = await withRpcRetry(() =>
+    publicClient.getLogs({
+      address: PREDICTION_MARKET_ADDRESS,
+      event: {
+        name: "Claimed",
+        type: "event",
+        inputs: [
+          { name: "marketId", type: "uint256", indexed: true },
+          { name: "user", type: "address", indexed: true },
+          { name: "payout", type: "uint256", indexed: false },
+        ],
+      },
+      args: {
+        marketId: BigInt(id),
+        user,
+      },
+      fromBlock: BigInt(0),
+      toBlock: "latest",
+    }),
+  );
+
+  return (logs.at(-1)?.transactionHash ?? null) as Hex | null;
 }
