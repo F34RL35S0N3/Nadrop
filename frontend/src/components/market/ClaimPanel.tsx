@@ -114,7 +114,7 @@ export function ClaimPanel({ market }: { market: Market | null }) {
     setHasLoaded(true);
 
     if (claimed) {
-      const savedTxHash = getSavedClaimTxHash(marketId, userAddress);
+      const savedTxHash = await getSavedClaimTxHash(marketId, userAddress);
 
       setStatus({
         text: "diklaim",
@@ -181,7 +181,9 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       });
 
       await publicClient.waitForTransactionReceipt({ hash: txHash });
-      saveClaimTxHash(marketId, userAddress as Address, txHash);
+      await saveClaimTxHash(marketId, userAddress as Address, txHash).catch(
+        console.error,
+      );
       setStatus({ text: "diklaim", txHash });
       await refresh();
     } catch (error) {

@@ -13,6 +13,8 @@ next/
 dist/
 build/
 coverage/
+.data/
+**/.data/
 nadrop.zip
 nadrop/
 _nadrop_extract_2/

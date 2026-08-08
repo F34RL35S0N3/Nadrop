@@ -1,30 +1,46 @@
 import type { Address, Hex } from "viem";
 
-const CLAIM_TX_HASHES_KEY = "swipepredict.claimTxHashes";
+type ClaimTxResponse = {
+  txHash: Hex | null;
+};
 
-function getClaimKey(marketId: number, user: Address) {
-  return `${marketId}:${user.toLowerCase()}`;
+export async function getSavedClaimTxHash(marketId: number, user: Address) {
+  const params = new URLSearchParams({
+    marketId: String(marketId),
+    userAddress: user,
+  });
+
+  const response = await fetch(`/api/claim-tx?${params.toString()}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as ClaimTxResponse;
+  return data.txHash;
 }
 
-function readStore() {
-  if (typeof window === "undefined") return {};
+export async function saveClaimTxHash(
+  marketId: number,
+  user: Address,
+  txHash: Hex,
+) {
+  const response = await fetch("/api/claim-tx", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      marketId,
+      userAddress: user,
+      txHash,
+    }),
+  });
 
-  try {
-    const raw = window.localStorage.getItem(CLAIM_TX_HASHES_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, Hex>) : {};
-  } catch {
-    return {};
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as
+      | { error?: string; details?: string }
+      | null;
+    throw new Error(data?.details ?? data?.error ?? "Save claim tx failed");
   }
-}
-
-export function getSavedClaimTxHash(marketId: number, user: Address) {
-  return readStore()[getClaimKey(marketId, user)] ?? null;
-}
-
-export function saveClaimTxHash(marketId: number, user: Address, txHash: Hex) {
-  if (typeof window === "undefined") return;
-
-  const store = readStore();
-  store[getClaimKey(marketId, user)] = txHash;
-  window.localStorage.setItem(CLAIM_TX_HASHES_KEY, JSON.stringify(store));
 }
