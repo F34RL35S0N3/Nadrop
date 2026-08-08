@@ -2,11 +2,13 @@
 
 import { CardStack } from "@/components/market/CardStack";
 import { SettlementToast } from "@/components/settlement/SettlementToast";
+import { useWallet } from "@/components/providers/WalletProvider";
 import { useMarkets } from "@/hooks/useMarkets";
 import { useSwipePredict } from "@/hooks/useSwipePredict";
 import { MOCK_LEADERBOARD, MOCK_PREDICTIONS, truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
 
 export default function MarketPage() {
+  const { connect, isConnected, ready } = useWallet();
   const {
     currentMarket,
     nextMarket,
@@ -25,6 +27,32 @@ export default function MarketPage() {
   } = useSwipePredict();
 
   const allPredictions = [...predictions, ...MOCK_PREDICTIONS];
+
+  if (!isConnected) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
+        <div className="max-w-sm rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-card)]">
+          <p className="font-data text-xs uppercase tracking-wider text-[var(--color-chrome)] mb-3">
+            Login required
+          </p>
+          <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-3">
+            Login dulu untuk mulai swipe.
+          </h1>
+          <p className="text-sm text-[var(--color-chrome)] mb-6">
+            Pilih Privy email atau MetaMask di modal login.
+          </p>
+          <button
+            type="button"
+            onClick={connect}
+            disabled={!ready}
+            className="w-full rounded-[var(--radius-button)] bg-[var(--color-ink)] px-5 py-3 font-semibold text-[var(--color-base)] disabled:opacity-50"
+          >
+            Login with Privy / MetaMask
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col px-4 md:px-6 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
@@ -130,9 +158,9 @@ export default function MarketPage() {
             />
           </div>
 
-          {/* Quick action buttons for desktop */}
+          {/* Quick action buttons for desktop and mobile fallback */}
           {hasMore && currentMarket && (
-            <div className="hidden md:flex items-center gap-4 mt-6">
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
               <button
                 onClick={() => {
                   onSwipe(currentMarket, "left");
