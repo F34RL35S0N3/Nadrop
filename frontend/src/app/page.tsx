@@ -123,7 +123,7 @@ export default function LandingPage() {
           id="connect-wallet-cta"
           className="w-full max-w-xs px-8 py-3.5 rounded-[var(--radius-button)] bg-[var(--color-ink)] text-[var(--color-base)] text-base font-semibold transition-all duration-200 hover:opacity-90 shadow-[var(--shadow-card)]"
         >
-          Connect Wallet
+          Login with Privy / MetaMask
         </motion.button>
 
         {/* Trust signals */}

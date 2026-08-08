@@ -148,6 +148,20 @@ export default function MarketPage() {
               </button>
               <button
                 onClick={() => {
+                  onSwipe(currentMarket, "up");
+                  setTimeout(advanceToNext, 300);
+                }}
+                className="flex items-center gap-2 px-6 py-3 rounded-[var(--radius-button)] border border-[var(--color-chrome-border)] text-[var(--color-chrome)] text-sm font-medium hover:bg-[var(--color-surface)] transition-colors duration-200"
+                id="desktop-btn-skip"
+              >
+                SKIP
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 12V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <path d="M4.5 7.5L8 4L11.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
                   onSwipe(currentMarket, "right");
                   setTimeout(advanceToNext, 300);
                 }}
@@ -230,8 +244,8 @@ export default function MarketPage() {
             </h3>
             <div className="space-y-3">
               {[
-                { step: "1", label: "Swipe kanan untuk YA, kiri untuk TIDAK" },
-                { step: "2", label: "Stake otomatis 10 MON per prediksi" },
+                { step: "1", label: "Swipe kanan YA, kiri TIDAK, atas SKIP" },
+                { step: "2", label: "Stake otomatis 1 mUSDC per prediksi" },
                 { step: "3", label: "Settlement instan via x402 protocol" },
                 { step: "4", label: "Menang? Klaim profit langsung" },
               ].map((item) => (

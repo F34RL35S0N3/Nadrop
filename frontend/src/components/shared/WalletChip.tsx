@@ -23,7 +23,7 @@ export function WalletChip() {
         id="connect-wallet-header"
         className="px-4 py-2 rounded-[var(--radius-button)] bg-[var(--color-ink)] text-[var(--color-base)] text-sm font-medium transition-all duration-200 hover:opacity-90 active:scale-[0.97] disabled:opacity-50"
       >
-        Login (email)
+        Login
       </button>
     );
   }

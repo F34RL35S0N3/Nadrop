@@ -105,9 +105,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ["email"],
+        loginMethods: ["email", "wallet"],
+        appearance: {
+          theme: "light",
+          accentColor: "#0E9F6E",
+          landingHeader: "Login ke SwipePredict",
+          loginMessage: "Pakai email Privy atau MetaMask.",
+          walletList: ["metamask", "detected_ethereum_wallets"],
+          walletChainType: "ethereum-only",
+        },
         defaultChain: monadTestnet,
         supportedChains: [monadTestnet],
+        externalWallets: {
+          disableAllExternalWallets: false,
+        },
         embeddedWallets: {
           ethereum: {
             createOnLogin: "users-without-wallets",
