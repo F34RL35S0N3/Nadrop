@@ -68,6 +68,36 @@ export default function MarketPage() {
     return () => window.clearInterval(interval);
   }, [loadLeaderboard]);
 
+  // Keyboard navigation for PC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!hasMore || !currentMarket || activeSwipe || !isConnected) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          onSwipe(currentMarket, "left");
+          setTimeout(advanceToNext, 300);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          onSwipe(currentMarket, "right");
+          setTimeout(advanceToNext, 300);
+          break;
+        case "ArrowUp":
+        case "ArrowDown":
+          e.preventDefault();
+          onSwipe(currentMarket, "up");
+          setTimeout(advanceToNext, 300);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [hasMore, currentMarket, activeSwipe, isConnected, onSwipe, advanceToNext]);
+
   const totalPredictions = predictions.length;
   const wins = predictions.filter((prediction) => prediction.status === "won").length;
 
