@@ -94,13 +94,11 @@ export function ClaimPanel({ market }: { market: Market | null }) {
   const refresh = useCallback(async () => {
     if (!market || !userAddress) return;
 
-    const [rawMarket, yesStake, noStake, claimed, balance] = await Promise.all([
-      readMarket(marketId),
-      readStake(marketId, userAddress, true),
-      readStake(marketId, userAddress, false),
-      readClaimed(marketId, userAddress),
-      readUsdcBalance(userAddress),
-    ]);
+    const rawMarket = await readMarket(marketId);
+    const yesStake = await readStake(marketId, userAddress, true);
+    const noStake = await readStake(marketId, userAddress, false);
+    const claimed = await readClaimed(marketId, userAddress);
+    const balance = await readUsdcBalance(userAddress);
 
     setClaimState({
       yesStake,
@@ -110,26 +108,39 @@ export function ClaimPanel({ market }: { market: Market | null }) {
       outcome: rawMarket.outcome,
       claimed,
     });
+    setHasLoaded(true);
 
     if (claimed) {
-      const txHash = await readLatestClaimTxHash(marketId, userAddress);
       setStatus({
         text: "diklaim",
-        txHash: txHash ?? undefined,
       });
+
+      readLatestClaimTxHash(marketId, userAddress)
+        .then((txHash) => {
+          setStatus({
+            text: "diklaim",
+            txHash: txHash ?? undefined,
+            error: txHash ? undefined : "Tx claim sudah terjadi, hash belum ditemukan dari RPC logs.",
+          });
+        })
+        .catch((error) => {
+          setStatus({
+            text: "diklaim",
+            error: `Tx claim sudah terjadi, detail log gagal dibaca: ${extractError(error)}`,
+          });
+        });
     } else {
       setStatus((current) =>
         current.text === "diklaim" ? { text: "idle" } : current,
       );
     }
-
-    setHasLoaded(true);
   }, [market, marketId, userAddress]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     refresh().catch((error) => {
+      setHasLoaded(true);
       setStatus({ text: "error", error: extractError(error) });
     });
 
