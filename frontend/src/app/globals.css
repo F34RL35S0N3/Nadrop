@@ -1,0 +1,202 @@
+@import "tailwindcss";
+
+/* ── Design Tokens (PRD §5) ── */
+@theme inline {
+  /* Colors */
+  --color-base: #F3F6F4;
+  --color-ink: #0B1210;
+  --color-yes: #0E9F6E;
+  --color-yes-light: #0E9F6E1A;
+  --color-yes-mid: #0E9F6E40;
+  --color-no: #E85D4C;
+  --color-no-light: #E85D4C1A;
+  --color-no-mid: #E85D4C40;
+  --color-live: #F5A623;
+  --color-live-light: #F5A6231A;
+  --color-chrome: #8792A2;
+  --color-chrome-light: #8792A220;
+  --color-chrome-border: #8792A230;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #F8FAF9;
+
+  /* Fonts */
+  --font-display: var(--font-cabinet), "Inter", system-ui, sans-serif;
+  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-data: var(--font-jetbrains), "JetBrains Mono", "Fira Code", monospace;
+
+  /* Shadows */
+  --shadow-card: 0 2px 16px rgba(11, 18, 16, 0.06), 0 1px 4px rgba(11, 18, 16, 0.04);
+  --shadow-card-hover: 0 8px 32px rgba(11, 18, 16, 0.10), 0 2px 8px rgba(11, 18, 16, 0.06);
+  --shadow-stack: 0 1px 8px rgba(11, 18, 16, 0.04);
+  --shadow-overlay: 0 -4px 32px rgba(11, 18, 16, 0.12);
+
+  /* Radii */
+  --radius-card: 16px;
+  --radius-button: 10px;
+  --radius-chip: 8px;
+  --radius-badge: 6px;
+
+  /* Transition */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Base Styles ── */
+body {
+  background: var(--color-base);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-chrome);
+  border-radius: 4px;
+}
+
+/* ── Pulse Line Animation (PRD §5.4.2) ── */
+@keyframes pulse-line {
+  0%, 100% {
+    transform: scaleX(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scaleX(1.02);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+/* ── Settlement Status Animation (PRD §5.4.3) ── */
+@keyframes settle-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes settle-check {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* ── Card Stack Animation ── */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Live Indicator Pulse ── */
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ── Utility Classes ── */
+.animate-pulse-line {
+  animation: pulse-line 2s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.animate-settle-appear {
+  animation: settle-appear 0.25s var(--ease-snap) forwards;
+}
+
+.animate-settle-check {
+  animation: settle-check 0.3s var(--ease-snap) forwards;
+}
+
+.animate-card-enter {
+  animation: card-enter 0.35s var(--ease-snap) forwards;
+}
+
+.animate-live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* ── Font Data ── */
+.font-data {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* ── Focus Visible (Accessibility) ── */
+*:focus-visible {
+  outline: 2px solid var(--color-yes);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Reduced Motion (PRD §7) ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-line,
+  .animate-pulse-dot,
+  .animate-settle-appear,
+  .animate-settle-check,
+  .animate-card-enter,
+  .animate-live-pulse {
+    animation: none !important;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--color-yes-mid);
+  color: var(--color-ink);
+}
