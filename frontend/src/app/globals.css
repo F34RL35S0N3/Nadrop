@@ -1,40 +1,40 @@
 @import "tailwindcss";
 
-/* ── Design Tokens (PRD §5) ── */
+/* ── Design Tokens (Hand-Drawn & Analog) ── */
 @theme inline {
   /* Colors */
-  --color-base: #F3F6F4;
-  --color-ink: #0B1210;
-  --color-yes: #0E9F6E;
-  --color-yes-light: #0E9F6E1A;
-  --color-yes-mid: #0E9F6E40;
-  --color-no: #E85D4C;
-  --color-no-light: #E85D4C1A;
-  --color-no-mid: #E85D4C40;
-  --color-live: #F5A623;
-  --color-live-light: #F5A6231A;
-  --color-chrome: #8792A2;
-  --color-chrome-light: #8792A220;
-  --color-chrome-border: #8792A230;
-  --color-surface: #FFFFFF;
-  --color-surface-elevated: #F8FAF9;
+  --color-base: #F4EFE6;
+  --color-ink: #2C2A29;
+  --color-yes: #2E7D32;
+  --color-yes-light: #2E7D321A;
+  --color-yes-mid: #2E7D3240;
+  --color-no: #C62828;
+  --color-no-light: #C628281A;
+  --color-no-mid: #C6282840;
+  --color-live: #E65100;
+  --color-live-light: #E651001A;
+  --color-chrome: #78716C;
+  --color-chrome-light: #78716C20;
+  --color-chrome-border: #2C2A2930;
+  --color-surface: #FFFAF0;
+  --color-surface-elevated: #FFFDF8;
 
   /* Fonts */
-  --font-display: var(--font-cabinet), "Inter", system-ui, sans-serif;
-  --font-body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --font-display: var(--font-hand), cursive, "Inter", system-ui, sans-serif;
+  --font-body: var(--font-hand), cursive, "Inter", system-ui, sans-serif;
   --font-data: var(--font-jetbrains), "JetBrains Mono", "Fira Code", monospace;
 
-  /* Shadows */
-  --shadow-card: 0 2px 16px rgba(11, 18, 16, 0.06), 0 1px 4px rgba(11, 18, 16, 0.04);
-  --shadow-card-hover: 0 8px 32px rgba(11, 18, 16, 0.10), 0 2px 8px rgba(11, 18, 16, 0.06);
-  --shadow-stack: 0 1px 8px rgba(11, 18, 16, 0.04);
-  --shadow-overlay: 0 -4px 32px rgba(11, 18, 16, 0.12);
+  /* Shadows (Solid / Lo-Fi / Anti-SaaS) */
+  --shadow-card: 4px 4px 0px var(--color-ink);
+  --shadow-card-hover: 6px 6px 0px var(--color-ink);
+  --shadow-stack: 2px 2px 0px var(--color-chrome-border);
+  --shadow-overlay: 0 0 0 2px var(--color-ink), 8px 8px 0px var(--color-ink);
 
-  /* Radii */
-  --radius-card: 16px;
-  --radius-button: 10px;
-  --radius-chip: 8px;
-  --radius-badge: 6px;
+  /* Radii (Wobbly / Irregular) */
+  --radius-card: 255px 15px 225px 15px/15px 225px 15px 255px;
+  --radius-button: 255px 15px 225px 15px/15px 225px 15px 255px;
+  --radius-chip: 15px 225px 15px 255px/255px 15px 225px 15px;
+  --radius-badge: 15px 225px 15px 255px/255px 15px 225px 15px;
 
   /* Transition */
   --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
@@ -42,7 +42,8 @@
 
 /* ── Base Styles ── */
 body {
-  background: var(--color-base);
+  background-color: var(--color-base);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
