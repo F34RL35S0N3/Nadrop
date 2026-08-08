@@ -14,6 +14,7 @@ import {
   type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { saveStakeRecord } from "@/lib/server/localDb";
 
 const PREDICTION_MARKET_ADDRESS =
   "0x9FC2595F6493b939Db9E9116273129d650A55f86" as const;
@@ -170,6 +171,14 @@ async function readStakeBody(request: NextRequest) {
 async function stakeHandler(body: StakeBody, userAddress: Address) {
   try {
     const txHash = await callStakeFor(userAddress, body.marketId, body.side);
+    await saveStakeRecord({
+      marketId: body.marketId,
+      userAddress,
+      side: body.side,
+      amount: STAKE_AMOUNT,
+      txHash,
+      createdAt: Date.now(),
+    }).catch(console.error);
 
     return NextResponse.json({
       success: true,

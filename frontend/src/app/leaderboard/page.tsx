@@ -1,90 +1,151 @@
 "use client";
 
-import { MOCK_LEADERBOARD, truncateAddress } from "@/lib/mockData";
+import { useCallback, useEffect, useState } from "react";
 import { LeaderboardRow } from "@/components/leaderboard/LeaderboardRow";
+import { useWallet } from "@/components/providers/WalletProvider";
+import { truncateAddress } from "@/lib/mockData";
+import type { LeaderboardEntry } from "@/lib/types";
+
+type LeaderboardResponse = {
+  entries?: LeaderboardEntry[];
+  error?: string;
+  details?: string;
+};
+
+function scoreLabel(entry?: LeaderboardEntry) {
+  if (!entry) return "-";
+
+  return `${entry.totalProfit >= 0 ? "+" : ""}${entry.totalProfit.toFixed(1)}`;
+}
+
+function nameLabel(entry?: LeaderboardEntry) {
+  if (!entry) return "-";
+
+  return entry.displayName ?? truncateAddress(entry.address);
+}
 
 export default function LeaderboardPage() {
-  const currentUser = MOCK_LEADERBOARD.find((e) => e.isCurrentUser);
+  const { address } = useWallet();
+  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadLeaderboard = useCallback(async () => {
+    try {
+      const response = await fetch("/api/leaderboard", { cache: "no-store" });
+      const data = (await response.json()) as LeaderboardResponse;
+
+      if (!response.ok) {
+        throw new Error(data.details ?? data.error ?? "Leaderboard gagal dibaca");
+      }
+
+      const currentAddress = address?.toLowerCase();
+      setEntries(
+        (data.entries ?? []).map((entry) => ({
+          ...entry,
+          isCurrentUser:
+            Boolean(currentAddress) &&
+            entry.address.toLowerCase() === currentAddress,
+        })),
+      );
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    loadLeaderboard();
+    const interval = window.setInterval(loadLeaderboard, 15000);
+
+    return () => window.clearInterval(interval);
+  }, [loadLeaderboard]);
+
+  const currentUser = entries.find((entry) => entry.isCurrentUser);
+  const topEntries = entries.slice(0, 3);
 
   return (
-    <div className="flex-1 flex flex-col px-4 md:px-6 pt-6 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
-      {/* Page Header */}
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pb-24 pt-6 md:px-6 md:pb-8">
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold text-[var(--color-ink)] mb-1">
+        <h1 className="mb-1 font-display text-2xl font-bold text-[var(--color-ink)]">
           Peringkat
         </h1>
         <p className="text-sm text-[var(--color-chrome)]">
-          Predictor terbaik di SwipePredict
+          Predictor terbaik berdasarkan profit real dari market resolved.
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:gap-8 w-full">
-        {/* ── Left: Podium + Your Stats ── */}
-        <div className="lg:w-80 xl:w-96 flex-shrink-0 mb-6 lg:mb-0">
-          {/* Top 3 Podium */}
-          <div className="bg-[var(--color-surface)] rounded-[var(--radius-card)] shadow-[var(--shadow-stack)] p-6 mb-4">
-            <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-6 text-center">
+      <div className="flex w-full flex-col lg:flex-row lg:gap-8">
+        <div className="mb-6 flex-shrink-0 lg:mb-0 lg:w-80 xl:w-96">
+          <div className="mb-4 rounded-[var(--radius-card)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-stack)]">
+            <h3 className="mb-6 text-center text-xs font-medium uppercase tracking-wider text-[var(--color-chrome)]">
               Top 3
             </h3>
-            <div className="flex items-end justify-center gap-4">
-              {/* 2nd place */}
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-[var(--color-chrome)] flex items-center justify-center text-white font-bold text-lg mb-2">
-                  2
-                </div>
-                <div className="font-data text-[11px] text-[var(--color-chrome)] text-center truncate max-w-[80px]">
-                  {MOCK_LEADERBOARD[1]?.displayName ||
-                    truncateAddress(MOCK_LEADERBOARD[1]?.address || "")}
-                </div>
-                <div className="font-data text-sm font-bold text-[var(--color-yes)] mt-0.5">
-                  +{MOCK_LEADERBOARD[1]?.totalProfit.toFixed(1)}
-                </div>
-                <div className="w-16 h-16 rounded-t-lg bg-[var(--color-chrome)] opacity-15 mt-2" />
-              </div>
 
-              {/* 1st place */}
-              <div className="flex flex-col items-center -mb-2">
-                <div className="relative mb-2">
-                  <div className="w-14 h-14 rounded-full bg-[#F5A623] flex items-center justify-center text-white font-bold text-xl">
-                    1
-                  </div>
-                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-                      <path d="M8 0L16 12H0L8 0Z" fill="#F5A623" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="font-data text-[11px] text-[var(--color-ink)] font-medium text-center truncate max-w-[80px]">
-                  {MOCK_LEADERBOARD[0]?.displayName ||
-                    truncateAddress(MOCK_LEADERBOARD[0]?.address || "")}
-                </div>
-                <div className="font-data text-sm font-bold text-[var(--color-yes)] mt-0.5">
-                  +{MOCK_LEADERBOARD[0]?.totalProfit.toFixed(1)}
-                </div>
-                <div className="w-16 h-24 rounded-t-lg bg-[#F5A623] opacity-15 mt-2" />
+            {isLoading ? (
+              <div className="text-center font-data text-xs text-[var(--color-chrome)]">
+                Loading leaderboard...
               </div>
+            ) : topEntries.length === 0 ? (
+              <div className="text-center font-data text-xs text-[var(--color-chrome)]">
+                Belum ada stake resolved yang tercatat.
+              </div>
+            ) : (
+              <div className="flex items-end justify-center gap-4">
+                <div className="flex flex-col items-center">
+                  <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-chrome)] text-lg font-bold text-white">
+                    2
+                  </div>
+                  <div className="max-w-[80px] truncate text-center font-data text-[11px] text-[var(--color-chrome)]">
+                    {nameLabel(topEntries[1])}
+                  </div>
+                  <div className="mt-0.5 font-data text-sm font-bold text-[var(--color-yes)]">
+                    {scoreLabel(topEntries[1])}
+                  </div>
+                  <div className="mt-2 h-16 w-16 rounded-t-lg bg-[var(--color-chrome)] opacity-15" />
+                </div>
 
-              {/* 3rd place */}
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-[#CD7F32] flex items-center justify-center text-white font-bold text-lg mb-2">
-                  3
+                <div className="-mb-2 flex flex-col items-center">
+                  <div className="relative mb-2">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F5A623] text-xl font-bold text-white">
+                      1
+                    </div>
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                      <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                        <path d="M8 0L16 12H0L8 0Z" fill="#F5A623" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="max-w-[80px] truncate text-center font-data text-[11px] font-medium text-[var(--color-ink)]">
+                    {nameLabel(topEntries[0])}
+                  </div>
+                  <div className="mt-0.5 font-data text-sm font-bold text-[var(--color-yes)]">
+                    {scoreLabel(topEntries[0])}
+                  </div>
+                  <div className="mt-2 h-24 w-16 rounded-t-lg bg-[#F5A623] opacity-15" />
                 </div>
-                <div className="font-data text-[11px] text-[var(--color-chrome)] text-center truncate max-w-[80px]">
-                  {MOCK_LEADERBOARD[2]?.displayName ||
-                    truncateAddress(MOCK_LEADERBOARD[2]?.address || "")}
+
+                <div className="flex flex-col items-center">
+                  <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#CD7F32] text-lg font-bold text-white">
+                    3
+                  </div>
+                  <div className="max-w-[80px] truncate text-center font-data text-[11px] text-[var(--color-chrome)]">
+                    {nameLabel(topEntries[2])}
+                  </div>
+                  <div className="mt-0.5 font-data text-sm font-bold text-[var(--color-yes)]">
+                    {scoreLabel(topEntries[2])}
+                  </div>
+                  <div className="mt-2 h-12 w-16 rounded-t-lg bg-[#CD7F32] opacity-15" />
                 </div>
-                <div className="font-data text-sm font-bold text-[var(--color-yes)] mt-0.5">
-                  +{MOCK_LEADERBOARD[2]?.totalProfit.toFixed(1)}
-                </div>
-                <div className="w-16 h-12 rounded-t-lg bg-[#CD7F32] opacity-15 mt-2" />
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Your Position (Desktop sidebar) */}
-          {currentUser && (
-            <div className="hidden lg:block bg-[var(--color-yes-light)] border border-[var(--color-yes-mid)] rounded-[var(--radius-card)] p-4 shadow-[var(--shadow-stack)]">
-              <h3 className="text-xs font-medium text-[var(--color-yes)] uppercase tracking-wider mb-3">
+          {currentUser ? (
+            <div className="hidden rounded-[var(--radius-card)] border border-[var(--color-yes-mid)] bg-[var(--color-yes-light)] p-4 shadow-[var(--shadow-stack)] lg:block">
+              <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-[var(--color-yes)]">
                 Posisi Kamu
               </h3>
               <div className="space-y-3">
@@ -109,22 +170,45 @@ export default function LeaderboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-ink)]">Total Profit</span>
+                  <span className="text-sm text-[var(--color-ink)]">Profit</span>
                   <span className="font-data text-lg font-bold text-[var(--color-yes)]">
-                    +{currentUser.totalProfit.toFixed(1)} MON
+                    {scoreLabel(currentUser)} mUSDC
                   </span>
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
-        {/* ── Right: Full Ranking List ── */}
-        <div className="flex-1 min-w-0">
-          <div className="space-y-2">
-            {MOCK_LEADERBOARD.map((entry) => (
-              <LeaderboardRow key={entry.rank} entry={entry} />
-            ))}
+        <div className="min-w-0 flex-1">
+          <div className="rounded-[var(--radius-card)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-stack)] md:p-6">
+            <h2 className="mb-5 text-sm font-medium uppercase tracking-wider text-[var(--color-chrome)]">
+              Top Predictors
+            </h2>
+
+            {error ? (
+              <pre className="whitespace-pre-wrap break-words font-data text-xs text-[var(--color-no)]">
+                {error}
+              </pre>
+            ) : null}
+
+            {!error && isLoading ? (
+              <div className="font-data text-xs text-[var(--color-chrome)]">
+                Loading leaderboard...
+              </div>
+            ) : null}
+
+            {!error && !isLoading && entries.length === 0 ? (
+              <div className="font-data text-xs text-[var(--color-chrome)]">
+                Belum ada ranking. Stake dan resolve market dulu.
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              {entries.map((entry) => (
+                <LeaderboardRow key={entry.address} entry={entry} />
+              ))}
+            </div>
           </div>
         </div>
       </div>

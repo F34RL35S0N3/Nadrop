@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAddress, isAddress, isHex, type Address, type Hex } from "viem";
-import { getClaimTxHash, saveClaimTxHash } from "@/lib/server/claimTxDb";
+import { getClaimTxHash, saveClaimTxHash } from "@/lib/server/localDb";
 
 export const runtime = "nodejs";
 

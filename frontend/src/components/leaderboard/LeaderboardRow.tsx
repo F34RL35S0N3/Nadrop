@@ -1,6 +1,6 @@
 "use client";
 
-import { truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
+import { truncateAddress } from "@/lib/mockData";
 import { LeaderboardEntry } from "@/lib/types";
 
 interface LeaderboardRowProps {
@@ -81,7 +81,7 @@ export function LeaderboardRow({ entry }: LeaderboardRowProps) {
           {entry.totalProfit >= 0 ? "+" : ""}
           {entry.totalProfit.toFixed(1)}
         </div>
-        <div className="text-[10px] text-[var(--color-chrome)]">MON</div>
+        <div className="text-[10px] text-[var(--color-chrome)]">mUSDC</div>
       </div>
     </div>
   );
