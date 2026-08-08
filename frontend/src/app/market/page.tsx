@@ -1,14 +1,25 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { CardStack } from "@/components/market/CardStack";
 import { SettlementToast } from "@/components/settlement/SettlementToast";
 import { useWallet } from "@/components/providers/WalletProvider";
 import { useMarkets } from "@/hooks/useMarkets";
 import { useSwipePredict } from "@/hooks/useSwipePredict";
-import { MOCK_LEADERBOARD, MOCK_PREDICTIONS, truncateAddress, MONAD_TESTNET_EXPLORER } from "@/lib/mockData";
+import { truncateAddress } from "@/lib/mockData";
+import type { LeaderboardEntry } from "@/lib/types";
+
+type LeaderboardResponse = {
+  entries?: LeaderboardEntry[];
+};
+
+function formatScore(value: number) {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(0)}`;
+}
 
 export default function MarketPage() {
-  const { connect, isConnected, ready } = useWallet();
+  const { address, connect, isConnected, ready } = useWallet();
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const {
     currentMarket,
     nextMarket,
@@ -26,7 +37,34 @@ export default function MarketPage() {
     dismissOverlay,
   } = useSwipePredict();
 
-  const allPredictions = [...predictions, ...MOCK_PREDICTIONS];
+  const loadLeaderboard = useCallback(async () => {
+    const response = await fetch("/api/leaderboard", { cache: "no-store" });
+    if (!response.ok) return;
+
+    const data = (await response.json()) as LeaderboardResponse;
+    const currentAddress = address?.toLowerCase();
+
+    setLeaderboard(
+      (data.entries ?? []).map((entry) => ({
+        ...entry,
+        isCurrentUser:
+          Boolean(currentAddress) &&
+          entry.address.toLowerCase() === currentAddress,
+      })),
+    );
+  }, [address]);
+
+  useEffect(() => {
+    loadLeaderboard().catch(console.error);
+    const interval = window.setInterval(() => {
+      loadLeaderboard().catch(console.error);
+    }, 15000);
+
+    return () => window.clearInterval(interval);
+  }, [loadLeaderboard]);
+
+  const totalPredictions = predictions.length;
+  const wins = predictions.filter((prediction) => prediction.status === "won").length;
 
   if (!isConnected) {
     return (
@@ -75,18 +113,14 @@ export default function MarketPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[var(--color-ink)]">Total Prediksi</span>
                 <span className="font-data text-sm font-medium text-[var(--color-ink)]">
-                  {allPredictions.length}
+                  {totalPredictions}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[var(--color-ink)]">Win Rate</span>
                 <span className="font-data text-sm font-medium text-[var(--color-yes)]">
-                  {allPredictions.length > 0
-                    ? Math.round(
-                        (allPredictions.filter((p) => p.status === "won").length /
-                          allPredictions.length) *
-                          100
-                      )
+                  {totalPredictions > 0
+                    ? Math.round((wins / totalPredictions) * 100)
                     : 0}
                   %
                 </span>
@@ -100,9 +134,14 @@ export default function MarketPage() {
               Top Predictors
             </h3>
             <div className="space-y-2.5">
-              {MOCK_LEADERBOARD.slice(0, 5).map((entry) => (
+              {leaderboard.length === 0 ? (
+                <p className="py-4 text-center font-data text-xs text-[var(--color-chrome)]">
+                  Belum ada ranking real.
+                </p>
+              ) : null}
+              {leaderboard.slice(0, 5).map((entry) => (
                 <div
-                  key={entry.rank}
+                  key={entry.address}
                   className={`flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-badge)] ${
                     entry.isCurrentUser
                       ? "bg-[var(--color-yes-light)]"
@@ -128,7 +167,7 @@ export default function MarketPage() {
                     </span>
                   </div>
                   <span className="font-data text-xs text-[var(--color-yes)]">
-                    +{entry.totalProfit.toFixed(0)}
+                    {formatScore(entry.totalProfit)}
                   </span>
                 </div>
               ))}
@@ -212,9 +251,9 @@ export default function MarketPage() {
             <h3 className="text-xs font-medium text-[var(--color-chrome)] uppercase tracking-wider mb-3">
               Prediksi Terbaru
             </h3>
-            {allPredictions.length > 0 ? (
+            {predictions.length > 0 ? (
               <div className="space-y-2.5">
-                {allPredictions.slice(0, 5).map((pred) => (
+                {predictions.slice(0, 5).map((pred) => (
                   <div
                     key={pred.id}
                     className="flex items-start gap-2.5 px-2.5 py-2 rounded-[var(--radius-badge)] hover:bg-[var(--color-surface-elevated)] transition-colors"
